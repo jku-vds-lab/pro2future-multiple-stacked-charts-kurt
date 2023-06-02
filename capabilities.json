@@ -522,6 +522,12 @@
                         ]
                     }
                 },
+                "centerOverlay": {
+                    "displayName": "Center Overlay",
+                    "type": {
+                        "bool": true
+                    }
+                },
                 "plotHeightFactor": {
                     "type": {
                         "numeric": true
