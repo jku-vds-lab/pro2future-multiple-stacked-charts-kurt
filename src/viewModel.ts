@@ -41,6 +41,7 @@ export class ViewModel {
     plotModels: PlotModel[];
     colorSettings: ColorSettings;
     plotOverlayRectangles?: OverlayRectangle[];
+    plotOverlayWidthColumnNames: string[];
     svgHeight: number;
     svgWidth: number;
     generalPlotSettings: GeneralPlotSettings;
@@ -305,6 +306,7 @@ export class ViewModel {
     }
 
     createVisualOverlayRectangles(dataModel: DataModel) {
+        this.plotOverlayWidthColumnNames = dataModel.overlayWidth.map((column) => column.columnName);
         if (dataModel.visualOverlayRectangles.length > 0) {
             const visualOverlayYPos = this.plotModels[0].plotTop;
             const visualOverlayHeight = this.plotModels[this.plotModels.length - 1].plotTop + this.generalPlotSettings.plotHeight - visualOverlayYPos;
@@ -321,7 +323,7 @@ export class ViewModel {
     }
 
     createPlotOverlayInformation(dataModel: DataModel): Result<void, OverlayDataError> {
-        if (dataModel.overlayLength.length == dataModel.overlayWidth.length && dataModel.overlayWidth.length > 0) {
+        if (dataModel.overlayWidth.length > 0 && dataModel.overlayLength.length == dataModel.overlayWidth[0].values.length && dataModel.overlayLength.length > 0) {
             const xValues = dataModel.xData.values;
             let overlayRectangles: OverlayRectangle[] = new Array<OverlayRectangle>(dataModel.overlayLength.length);
             const xAxisSettings = this.generalPlotSettings.xAxisSettings;
@@ -340,14 +342,14 @@ export class ViewModel {
                     endX = null;
                 }
                 overlayRectangles[i] = {
-                    width: dataModel.overlayWidth[i],
+                    width: dataModel.overlayWidth.map((rect) => rect.values[i]),
                     endX: endX,
                     y: y,
                     x: xAxisSettings.axisBreak ? xAxisSettings.indexMap.get(xValues[i]) : xValues[i],
                 };
             }
             overlayRectangles = overlayRectangles.filter((x) =>
-                x.x != null && dataModel.xData.isDate ? (<Date>x.x).getMilliseconds() >= 0 : <number>x.x >= 0 && x.width != null && x.width > 0
+                x.x != null && dataModel.xData.isDate ? (<Date>x.x).getMilliseconds() >= 0 : <number>x.x >= 0 && x.width != null && x.width.filter((w) => w > 0).length > 0
             );
             if (overlayRectangles.length == 0) {
                 return err(new OverlayDataError());

@@ -3,7 +3,18 @@ import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import ISandboxExtendedColorPalette = powerbi.extensibility.ISandboxExtendedColorPalette;
 import { getValue, getPlotFillColor } from './objectEnumerationUtility';
-import { PlotSettings, XAxisData, YAxisData, PlotType, AxisInformation, AxisInformationInterface, LegendData, TooltipColumnData, OverlayType } from './plotInterface';
+import {
+    PlotSettings,
+    XAxisData,
+    YAxisData,
+    PlotType,
+    AxisInformation,
+    AxisInformationInterface,
+    LegendData,
+    TooltipColumnData,
+    OverlayType,
+    OverlayWidthColumn,
+} from './plotInterface';
 import { Primitive } from 'd3';
 import { PlotSettingsNames, Settings, FilterType } from './constants';
 import { ok, err, Result } from 'neverthrow';
@@ -107,7 +118,12 @@ function getCategoricalData(categorical: powerbi.DataViewCategorical, dataModel:
                 dataModel.overlayLength = <number[]>category.values;
             }
             if (roles.overlayWidth) {
-                dataModel.overlayWidth = <number[]>category.values;
+                for (const colId of category.source['rolesIndex']['overlayWidth']) {
+                    dataModel.overlayWidth[colId] = <OverlayWidthColumn>{
+                        values: <number[]>category.values,
+                        columnName: category.source.displayName,
+                    };
+                }
             }
             if (roles.overlayY) {
                 dataModel.overlayY = <number[]>category.values;
@@ -187,7 +203,12 @@ function getMeasureData(categorical: powerbi.DataViewCategorical, dataModel: Dat
                 dataModel.overlayLength = <number[]>(value.highlights ? value.highlights : value.values);
             }
             if (roles.overlayWidth) {
-                dataModel.overlayWidth = <number[]>(value.highlights ? value.highlights : value.values);
+                for (const colId of value.source['rolesIndex']['overlayWidth']) {
+                    dataModel.overlayWidth[colId] = <OverlayWidthColumn>{
+                        values: <number[]>(value.highlights ? value.highlights : value.values),
+                        columnName: value.source.displayName,
+                    };
+                }
             }
             if (roles.overlayY) {
                 dataModel.overlayY = <number[]>(value.highlights ? value.highlights : value.values);
@@ -311,7 +332,7 @@ export class DataModel {
     tooltipData: TooltipColumnData[];
     categoricalLegendData: LegendData;
     filterLegendData: LegendData[];
-    overlayWidth: number[];
+    overlayWidth: OverlayWidthColumn[];
     overlayLength: number[];
     overlayY: number[];
     visualOverlayRectangles: Primitive[];
@@ -365,6 +386,7 @@ export class DataModel {
                 plotTitle: plotTitle,
                 overlayType: OverlayType[getValue<string>(yColumnObjects, Settings.plotSettings, PlotSettingsNames.overlayType, OverlayType.None)],
                 centerOverlay: <boolean>getValue(yColumnObjects, Settings.plotSettings, PlotSettingsNames.centerOverlay, false),
+                overlayWidthIndex: getValue<number>(yColumnObjects, Settings.plotSettings, PlotSettingsNames.overlayWidthColumn, 0),
                 plotHeightFactor: getValue<number>(yColumnObjects, Settings.plotSettings, PlotSettingsNames.plotHeightFactor, 1),
                 xAxis: xAxisInformation,
                 yAxis: yAxisInformation,
@@ -378,6 +400,7 @@ export class DataModel {
                 },
             });
         }
+        console.log(this.plotSettingsArray[0].overlayWidthIndex);
     }
     private getAxisInformation(axisInformation: AxisInformation): Result<AxisInformationInterface, ParseAndTransformError> {
         switch (axisInformation) {

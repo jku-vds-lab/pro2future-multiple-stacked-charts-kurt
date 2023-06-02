@@ -25,7 +25,7 @@ export function createFormattingModel(viewModel: ViewModel): powerbi.visuals.For
     };
 
     for (const plotModel of viewModel.plotModels) {
-        addPlotSettingsGroup(plotModel, plotCard);
+        addPlotSettingsGroup(plotModel, plotCard, viewModel);
     }
 
     for (const legend of viewModel.legends.legends) {
@@ -529,6 +529,10 @@ function createPlotSettingsCard() {
         },
         {
             objectName: Settings.plotSettings,
+            propertyName: PlotSettingsNames.overlayWidthColumn,
+        },
+        {
+            objectName: Settings.plotSettings,
             propertyName: PlotSettingsNames.centerOverlay,
         },
         {
@@ -584,7 +588,7 @@ function getAxisInformationEnumValue(axisInfo: AxisInformationInterface): AxisIn
 }
 
 // eslint-disable-next-line max-lines-per-function
-function addPlotSettingsGroup(plotModel: PlotModel, plotCard: powerbi.visuals.FormattingCard) {
+function addPlotSettingsGroup(plotModel: PlotModel, plotCard: powerbi.visuals.FormattingCard, viewModel: ViewModel) {
     const groupName = 'plotSettingsGroup_' + plotModel.plotId;
     plotCard.groups.push({
         displayName: plotModel.metaDataColumn.displayName,
@@ -683,9 +687,26 @@ function addPlotSettingsGroup(plotModel: PlotModel, plotCard: powerbi.visuals.Fo
                 },
             },
             {
+                displayName: 'Overlay Width Column',
+                uid: groupName + PlotSettingsNames.overlayWidthColumn + Constants.uid,
+                control: {
+                    type: powerbi.visuals.FormattingComponent.Dropdown,
+                    properties: {
+                        descriptor: {
+                            objectName: Settings.plotSettings,
+                            propertyName: PlotSettingsNames.overlayWidthColumn,
+                            selector: { metadata: plotModel.metaDataColumn.queryName },
+                        },
+
+                        value: plotModel.plotSettings.overlayWidthIndex,
+                        items: viewModel.plotOverlayWidthColumnNames.map((name, i) => <powerbi.IEnumMember>{ displayName: name, value: i }),
+                    },
+                },
+            },
+            {
                 displayName: 'Center Overlay',
                 uid: groupName + PlotSettingsNames.centerOverlay + Constants.uid,
-                description:'Centers overlay vertically if enabled.',
+                description: 'Centers overlay vertically if enabled.',
                 control: {
                     type: powerbi.visuals.FormattingComponent.ToggleSwitch,
                     properties: {

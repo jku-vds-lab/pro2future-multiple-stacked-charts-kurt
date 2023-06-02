@@ -32,6 +32,7 @@ export enum PlotSettingsNames {
     showHeatmap = 'showHeatmap',
     plotTitle = 'plotTitle',
     overlayType = 'overlayType',
+    overlayWidthColumn = 'overlayWidthColumn',
     centerOverlay = 'centerOverlay',
     plotHeightFactor = 'plotHeightFactor',
     xAxisDisplay = 'xAxisDisplay',
