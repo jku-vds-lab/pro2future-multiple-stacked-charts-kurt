@@ -680,6 +680,7 @@ export class Visual implements IVisual {
                         .data(
                             plotModel.plotSettings.centerOverlay
                                 ? overlayRectangles.map((rect) => {
+                                      rect = structuredClone(rect);
                                       rect.y = -rect.width[widthIndex] / 2;
                                       return rect;
                                   })
