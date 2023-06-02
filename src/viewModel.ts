@@ -322,6 +322,7 @@ export class ViewModel {
     }
 
     createVisualOverlayRectangles(dataModel: DataModel) {
+        this.plotOverlayWidthColumnNames = dataModel.overlayWidth.map((column) => column.columnName);
         if (dataModel.visualOverlayRectangles.length > 0) {
             const visualOverlayYPos = this.plotModels[0].plotTop;
             const visualOverlayHeight = this.plotModels[this.plotModels.length - 1].plotTop + this.generalPlotSettings.plotHeight - visualOverlayYPos;

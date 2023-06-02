@@ -140,6 +140,7 @@
                     },
                     "overlayWidth": {
                         "max": 10
+                        "max": 10
                     },
                     "overlayY": {
                         "max": 1

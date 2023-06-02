@@ -431,6 +431,7 @@ export class DataModel {
                 },
             });
         }
+        console.log(this.plotSettingsArray[0].overlayWidthIndex);
     }
     private getAxisInformation(axisInformation: AxisInformation): Result<AxisInformationInterface, ParseAndTransformError> {
         switch (axisInformation) {
