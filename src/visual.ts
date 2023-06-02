@@ -674,25 +674,31 @@ export class Visual implements IVisual {
                     return err(new OverlayInformationError());
                 }
                 if (overlaytype == OverlayType.Rectangle) {
+                    const widthIndex = plotModel.plotSettings.overlayWidthIndex;
                     plot.select(`.${Constants.overlayClass}`)
                         .selectAll('rect')
-                        .data(plotModel.plotSettings.centerOverlay? overlayRectangles.map((rect)=>{
-                            rect.y = -rect.width/2;
-                            return rect;
-                        }):overlayRectangles)
+                        .data(
+                            plotModel.plotSettings.centerOverlay
+                                ? overlayRectangles.map((rect) => {
+                                      rect = structuredClone(rect);
+                                      rect.y = -rect.width[widthIndex] / 2;
+                                      return rect;
+                                  })
+                                : overlayRectangles
+                        )
                         .enter()
                         .append('rect')
                         .attr('x', function (d) {
                             return xScale(d.x);
                         })
                         .attr('y', function (d) {
-                            return yScale(d.y + d.width);
+                            return yScale(d.y + d.width[widthIndex]);
                         })
                         .attr('width', function (d) {
                             return xScale(d.endX) - xScale(d.x);
                         })
                         .attr('height', function (d) {
-                            return yScale(0) - yScale(d.width);
+                            return yScale(0) - yScale(d.width[widthIndex]);
                         })
                         .attr('fill', 'transparent')
                         .attr('stroke', colorSettings.overlayColor);

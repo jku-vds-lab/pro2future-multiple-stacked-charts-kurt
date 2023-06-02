@@ -154,7 +154,7 @@ export interface TooltipModel {
 }
 
 export interface OverlayRectangle {
-    width: number;
+    width: number[];
     endX: number;
     x: number | Date;
     y: number;
@@ -231,6 +231,7 @@ export interface PlotSettings {
     plotHeightFactor: number;
     plotTitle: string;
     overlayType: OverlayType;
+    overlayWidthIndex: number;
     centerOverlay:boolean;
     xAxis: AxisInformationInterface;
     yAxis: AxisInformationInterface;
@@ -289,6 +290,11 @@ export interface TooltipColumnData {
     name?: string;
     columnId: number;
     metaDataColumn: powerbi.DataViewMetadataColumn;
+}
+
+export interface OverlayWidthColumn {
+    values: number[];
+    columnName?: string;
 }
 
 export interface LegendData {
