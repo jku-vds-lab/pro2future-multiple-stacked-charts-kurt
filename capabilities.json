@@ -69,6 +69,11 @@
             ]
         },
         {
+            "displayName": "Plot Overlay: Category",
+            "name": "overlayCategory",
+            "kind": "GroupingOrMeasure"
+        },
+        {
             "displayName": "Tooltips",
             "name": "tooltip",
             "kind": "GroupingOrMeasure",
@@ -139,6 +144,9 @@
                     "overlayY": {
                         "max": 1
                     },
+                    "overlayCategory": {
+                        "max": 10
+                    },
                     "legend": {
                         "max": 1
                     },
@@ -187,7 +195,11 @@
                                 "in": "overlayY"
                             }
                         },
-
+                        {
+                            "for": {
+                                "in": "overlayCategory"
+                            }
+                        },
                         {
                             "for": {
                                 "in": "tooltip"
@@ -246,6 +258,11 @@
                         {
                             "for": {
                                 "in": "overlayY"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "overlayCategory"
                             }
                         },
                         {
