@@ -158,6 +158,7 @@ export interface OverlayRectangle {
     endX: number;
     x: number | Date;
     y: number;
+    color: string[];
 }
 
 export interface TooltipData {
@@ -232,7 +233,7 @@ export interface PlotSettings {
     plotTitle: string;
     overlayType: OverlayType;
     overlayWidthIndex: number;
-    centerOverlay:boolean;
+    centerOverlay: boolean;
     xAxis: AxisInformationInterface;
     yAxis: AxisInformationInterface;
     xLabel: string;

@@ -88,6 +88,7 @@ export enum FilterType {
     stringFilter = 'stringFilter',
     numberFilter = 'numberFilter',
     colorFilter = 'colorFilter',
+    noFilter = 'noFilter',
 }
 
 export class ArrayConstants {

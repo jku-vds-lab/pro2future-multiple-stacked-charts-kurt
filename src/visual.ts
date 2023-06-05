@@ -700,7 +700,8 @@ export class Visual implements IVisual {
                         .attr('height', function (d) {
                             return yScale(0) - yScale(d.width[widthIndex]);
                         })
-                        .attr('fill', 'transparent')
+                        .attr('fill', (d) => d.color[0]) //TODO: add selection of column
+                        .attr('fill-opacity', 0.3)
                         .attr('stroke', colorSettings.overlayColor);
                 } else if (overlaytype == OverlayType.Line) {
                     plot.select(`.${Constants.overlayClass}`)
