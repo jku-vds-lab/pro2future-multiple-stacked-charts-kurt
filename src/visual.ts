@@ -492,7 +492,7 @@ export class Visual implements IVisual {
         plotModel.d3Plot = <D3Plot>{ yName: plotModel.yName, type: plotType, root, points: null, x, y, yZeroLine, plotId: plotModel.plotId };
         this.addPlotTitle(plotModel, root).mapErr((err) => (plotError = err));
         this.addVerticalRuler(root, plotModel.plotHeight).mapErr((err) => (plotError = err));
-        this.drawOverlay(plotModel).mapErr((err) => (plotError = err));
+        this.drawPlotOverlay(plotModel).mapErr((err) => (plotError = err));
         if (plotError) {
             return err(plotError);
         }
@@ -660,10 +660,11 @@ export class Visual implements IVisual {
         }
     }
 
-    private drawOverlay(plotModel: PlotModel): Result<void, PlotError> {
+    private drawPlotOverlay(plotModel: PlotModel): Result<void, PlotError> {
         try {
             const colorSettings = this.viewModel.colorSettings.colorSettings;
             const overlaytype = plotModel.plotSettings.overlayType;
+            const overlayCategoryIndex = plotModel.plotSettings.overlayCategoryIndex;
             const overlayRectangles = this.viewModel.plotOverlayRectangles;
             const plotHeight = plotModel.plotHeight;
             const plot = plotModel.d3Plot.root;
@@ -700,7 +701,7 @@ export class Visual implements IVisual {
                         .attr('height', function (d) {
                             return yScale(0) - yScale(d.width[widthIndex]);
                         })
-                        .attr('fill', (d) => d.color[0]) //TODO: add selection of column
+                        .attr('fill', (d) => d.color[overlayCategoryIndex])
                         .attr('fill-opacity', 0.3)
                         .attr('stroke', colorSettings.overlayColor);
                 } else if (overlaytype == OverlayType.Line) {

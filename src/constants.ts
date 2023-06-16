@@ -33,6 +33,7 @@ export enum PlotSettingsNames {
     plotTitle = 'plotTitle',
     overlayType = 'overlayType',
     overlayWidthColumn = 'overlayWidthColumn',
+    overlayCategoryColumn = 'overlayCategoryColumn',
     centerOverlay = 'centerOverlay',
     plotHeightFactor = 'plotHeightFactor',
     xAxisDisplay = 'xAxisDisplay',

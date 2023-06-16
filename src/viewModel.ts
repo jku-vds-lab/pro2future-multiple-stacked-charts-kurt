@@ -43,6 +43,7 @@ export class ViewModel {
     colorSettings: ColorSettings;
     plotOverlayRectangles?: OverlayRectangle[];
     plotOverlayWidthColumnNames: string[];
+    plotOverlayCategoryNames: string[];
     svgHeight: number;
     svgWidth: number;
     generalPlotSettings: GeneralPlotSettings;
@@ -348,6 +349,7 @@ export class ViewModel {
         }
 
         this.plotOverlayWidthColumnNames = dataModel.overlayWidth.map((column) => column.columnName);
+        this.plotOverlayCategoryNames = dataModel.overlayCategory.map((column) => column.metaDataColumn.displayName);
         if (dataModel.overlayWidth.length > 0 && dataModel.overlayLength.length == dataModel.overlayWidth[0].values.length && dataModel.overlayLength.length > 0) {
             const xValues = dataModel.xData.values;
             let overlayRectangles: OverlayRectangle[] = new Array<OverlayRectangle>(dataModel.overlayLength.length);

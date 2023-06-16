@@ -412,6 +412,7 @@ export class DataModel {
                 overlayType: OverlayType[getValue<string>(yColumnObjects, Settings.plotSettings, PlotSettingsNames.overlayType, OverlayType.None)],
                 centerOverlay: <boolean>getValue(yColumnObjects, Settings.plotSettings, PlotSettingsNames.centerOverlay, false),
                 overlayWidthIndex: getValue<number>(yColumnObjects, Settings.plotSettings, PlotSettingsNames.overlayWidthColumn, 0),
+                overlayCategoryIndex: getValue<number>(yColumnObjects, Settings.plotSettings, PlotSettingsNames.overlayCategoryColumn, 0),
                 plotHeightFactor: getValue<number>(yColumnObjects, Settings.plotSettings, PlotSettingsNames.plotHeightFactor, 1),
                 xAxis: xAxisInformation,
                 yAxis: yAxisInformation,
