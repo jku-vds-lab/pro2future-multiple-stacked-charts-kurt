@@ -430,6 +430,26 @@ export class Visual implements IVisual {
         }
     }
 
+    private drawPlotOverlayLegend(plotModel: PlotModel) {
+        const selectionID = Constants.VisualOverlayLegendTitleSelection + plotModel.plotId.toString();
+        const margins = this.viewModel.generalPlotSettings;
+        const legend = this.viewModel.plotOverlayCategoryLegends[plotModel.plotSettings.overlayCategoryIndex - 1];
+
+        const yPosition = plotModel.plotTop + this.getYTransition(plotModel, plotModel.plotSettings.showHeatmap) + margins.legendHeight * 0.5;
+        // const legendCount = this.viewModel.legends.legends.length;
+        //TODO: change x for plot
+        let xPos = margins.margins.left + 50; //legendCount > 0 ? this.viewModel.legends.legends[legendCount - 1].legendXEndPosition + MarginSettings.legendSeparationMargin :
+        // if (this.viewModel.legends.legends.length > 0) {
+        //     xPos = this.viewModel.legends.legends[this.viewModel.legends.legends.length - 1].legendXEndPosition + MarginSettings.legendSeparationMargin;
+        // }
+        const className = plotModel.plotSettings.plotType + plotModel.plotId;
+        const dotsXPosition = [];
+        xPos = this.drawLegendTitle(legend.legendTitle, className, xPos, yPosition, selectionID);
+        xPos = this.drawLegendTexts(legend.legendValues, className, xPos, dotsXPosition, yPosition, new Set(legend.legendValues.map((x) => x.value)));
+        this.drawLegendDots(legend.legendValues, dotsXPosition, yPosition, '', null, NumberConstants.plotOverlayFillOpacity);
+        this.checkOutOfSvg(xPos);
+    }
+
     private drawVisualOverlayLegend() {
         const margins = this.viewModel.generalPlotSettings;
         const yPosition = margins.legendYPostion;
@@ -670,6 +690,9 @@ export class Visual implements IVisual {
             const plot = plotModel.d3Plot.root;
             const xScale = this.viewModel.generalPlotSettings.xAxisSettings.xScaleZoomed;
             const yScale = plotModel.d3Plot.y.yScaleZoomed;
+            if (overlayCategoryIndex > 0) {
+                this.drawPlotOverlayLegend(plotModel);
+            }
             if (overlaytype != OverlayType.None && overlayRectangles != null) {
                 if (overlayRectangles.length == 0) {
                     return err(new OverlayInformationError());
@@ -702,7 +725,7 @@ export class Visual implements IVisual {
                             return yScale(0) - yScale(d.width[widthIndex]);
                         })
                         .attr('fill', (d) => d.color[overlayCategoryIndex])
-                        .attr('fill-opacity', 0.3)
+                        .attr('fill-opacity', NumberConstants.plotOverlayFillOpacity)
                         .attr('stroke', colorSettings.overlayColor);
                 } else if (overlaytype == OverlayType.Line) {
                     plot.select(`.${Constants.overlayClass}`)
@@ -831,7 +854,6 @@ export class Visual implements IVisual {
     private drawHeatmap(dataPoints: DataPoint[], plotModel: PlotModel): Result<D3Heatmap, HeatmapError> {
         try {
             const generalPlotSettings = this.viewModel.generalPlotSettings;
-            const xAxisSettings = plotModel.plotSettings.xAxis;
             const isDateScale = generalPlotSettings.xAxisSettings.isDate && !generalPlotSettings.xAxisSettings.axisBreak;
             const extent = isDateScale
                 ? generalPlotSettings.xAxisSettings.xScaleZoomed.domain().map((x) => (<Date>x).getTime())
@@ -856,9 +878,7 @@ export class Visual implements IVisual {
             const colorScale = d3.scaleSequential().interpolator(d3[this.viewModel.colorSettings.colorSettings.heatmapColorScheme]).domain(d3.extent(heatmapValues));
             const heatmapScale = d3.scaleLinear().domain([0, heatmapValues.length]).range([0, this.viewModel.generalPlotSettings.plotWidth]);
 
-            let yTransition = plotModel.plotHeight + generalPlotSettings.margins.bottom;
-            yTransition += xAxisSettings.labels || xAxisSettings.ticks ? Heatmapmargins.heatmapMargin : 0;
-            yTransition += xAxisSettings.labels && xAxisSettings.ticks ? MarginSettings.xLabelSpace : 0;
+            const yTransition = this.getYTransition(plotModel);
             this.svg.selectAll('.Heatmap' + plotModel.plotId).remove();
             const heatmap = this.svg
                 .append('g')
@@ -893,6 +913,16 @@ export class Visual implements IVisual {
         } catch (error) {
             return err(new HeatmapError(error.stack));
         }
+    }
+
+    private getYTransition(plotModel: PlotModel, heatmap = false) {
+        const xAxisSettings = plotModel.plotSettings.xAxis;
+        const generalPlotSettings = this.viewModel.generalPlotSettings;
+        let yTransition = plotModel.plotHeight + generalPlotSettings.margins.bottom;
+        yTransition += xAxisSettings.labels || xAxisSettings.ticks ? Heatmapmargins.heatmapMargin : 0;
+        yTransition += xAxisSettings.labels && xAxisSettings.ticks ? MarginSettings.xLabelSpace : 0;
+        yTransition += heatmap ? Heatmapmargins.heatmapSpace : 0;
+        return yTransition;
     }
 
     private drawHeatmapLegend(yTransition: number, colorScale: d3.ScaleSequential<number, never>, heatmap: D3Selection, generalPlotSettings: GeneralPlotSettings) {

@@ -43,7 +43,7 @@ export class ViewModel {
     colorSettings: ColorSettings;
     plotOverlayRectangles?: OverlayRectangle[];
     plotOverlayWidthColumnNames: string[];
-    plotOverlayCategoryNames: string[];
+    plotOverlayCategoryLegends: Legend[];
     svgHeight: number;
     svgWidth: number;
     generalPlotSettings: GeneralPlotSettings;
@@ -196,6 +196,7 @@ export class ViewModel {
         const heatmapCount = dataModel.plotSettingsArray.filter((x) => x.showHeatmap).length;
         const plotHeightFactorSum = dataModel.plotSettingsArray.map((x) => x.plotHeightFactor).reduce((a, b) => a + b);
         const plotCount = dataModel.plotSettingsArray.length;
+        const plotLegendCount = dataModel.plotSettingsArray.filter((x) => x.overlayCategoryIndex > 0).length; //TODO: add categorical legend
         let plotHeightSpace: number =
             (this.svgHeight -
                 MarginSettings.svgTopPadding -
@@ -204,6 +205,7 @@ export class ViewModel {
                 MarginSettings.plotTitleHeight * plotTitlesCount -
                 MarginSettings.xLabelSpace * xLabelsCount -
                 Heatmapmargins.heatmapSpace * heatmapCount -
+                MarginSettings.legendHeight * plotLegendCount -
                 (MarginSettings.margins.top + MarginSettings.margins.bottom) * plotCount) /
             plotHeightFactorSum;
         if (plotHeightSpace < minPlotHeight) {
@@ -313,6 +315,7 @@ export class ViewModel {
             plotTop = formatXAxis.labels && formatXAxis.ticks ? plotTop + MarginSettings.xLabelSpace : plotTop;
             plotTop += plotModel.plotHeight + MarginSettings.margins.top + MarginSettings.margins.bottom;
             plotTop += plotModel.plotSettings.showHeatmap ? Heatmapmargins.heatmapSpace : 0;
+            plotTop += plotModel.plotSettings.overlayCategoryIndex > 0 ? MarginSettings.legendHeight : 0; //TODO: add categorical legend
         }
 
         this.generalPlotSettings.legendYPostion = plotTop + MarginSettings.legendTopMargin;
@@ -343,13 +346,12 @@ export class ViewModel {
     }
 
     createPlotOverlayInformation(dataModel: DataModel): Result<void, OverlayDataError> {
-        const legends: Legend[] = [];
+        this.plotOverlayCategoryLegends = [];
         for (const column of dataModel.overlayCategory) {
-            legends.push(this.createFilterLegend(column, true));
+            this.plotOverlayCategoryLegends.push(this.createFilterLegend(column, true));
         }
 
         this.plotOverlayWidthColumnNames = dataModel.overlayWidth.map((column) => column.columnName);
-        this.plotOverlayCategoryNames = dataModel.overlayCategory.map((column) => column.metaDataColumn.displayName);
         if (dataModel.overlayWidth.length > 0 && dataModel.overlayLength.length == dataModel.overlayWidth[0].values.length && dataModel.overlayLength.length > 0) {
             const xValues = dataModel.xData.values;
             let overlayRectangles: OverlayRectangle[] = new Array<OverlayRectangle>(dataModel.overlayLength.length);
@@ -373,14 +375,17 @@ export class ViewModel {
                     endX: endX,
                     y: y,
                     x: xAxisSettings.axisBreak ? xAxisSettings.indexMap.get(xValues[i]) : xValues[i],
-                    color: legends.map((l) => {
-                        const filtered = l.legendValues.filter((val) => val.value === l.legendDataPoints[i].yValue);
-                        if (filtered.length === 1) {
-                            return filtered[0].color;
-                        } else {
-                            return 'white';
-                        }
-                    }), //TODO
+                    color: [
+                        'transparent',
+                        ...this.plotOverlayCategoryLegends.map((l) => {
+                            const filtered = l.legendValues.filter((val) => val.value === l.legendDataPoints[i].yValue);
+                            if (filtered.length === 1) {
+                                return filtered[0].color;
+                            } else {
+                                return 'white';
+                            }
+                        }),
+                    ], //TODO
                 };
             }
             overlayRectangles = overlayRectangles.filter((x) =>
