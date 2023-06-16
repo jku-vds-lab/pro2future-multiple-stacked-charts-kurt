@@ -148,7 +148,7 @@
                         "max": 10
                     },
                     "legend": {
-                        "max": 1
+                        "max": 10
                     },
                     "filterLegend": {
                         "max": 5
@@ -494,10 +494,9 @@
                         }
                     }
                 },
-
-                "useLegendColor": {
+                "legendColorColumn": {
                     "type": {
-                        "bool": true
+                        "numeric": true
                     }
                 },
                 "showHeatmap": {

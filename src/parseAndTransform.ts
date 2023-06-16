@@ -152,12 +152,14 @@ function getCategoricalData(categorical: powerbi.DataViewCategorical, dataModel:
                 }
             }
             if (roles.legend) {
-                dataModel.categoricalLegendData = {
-                    name: category.source.displayName,
-                    values: category.values,
-                    metaDataColumn: category.source,
-                    type: FilterType.stringFilter,
-                };
+                for (const colId of category.source['rolesIndex']['legend']) {
+                    dataModel.categoricalLegendData[colId] = {
+                        name: category.source.displayName,
+                        values: category.values,
+                        metaDataColumn: category.source,
+                        type: category.source.type.text ? FilterType.stringFilter : FilterType.numberFilter,
+                    };
+                }
             }
 
             if (roles.filterLegend) {
@@ -201,7 +203,7 @@ function getMeasureData(categorical: powerbi.DataViewCategorical, dataModel: Dat
             if (roles.y_axis) {
                 const yId = value.source['rolesIndex']['y_axis'][0];
                 const yColumnObjects = getMetadataColumn(metadataColumns, value.source.index).objects;
-                const useHighlights = getValue<boolean>(yColumnObjects, Settings.plotSettings, PlotSettingsNames.useLegendColor, false);
+                const useHighlights = getValue<number>(yColumnObjects, Settings.plotSettings, PlotSettingsNames.legendColorColumn, 0) > 0;
                 const yAxis: YAxisData = {
                     name: value.source.displayName,
                     values: <number[]>(useHighlights && value.highlights ? value.highlights : value.values),
@@ -247,12 +249,14 @@ function getMeasureData(categorical: powerbi.DataViewCategorical, dataModel: Dat
                 }
             }
             if (roles.legend) {
-                dataModel.categoricalLegendData = {
-                    name: value.source.displayName,
-                    values: <string[]>value.values,
-                    metaDataColumn: value.source,
-                    type: FilterType.stringFilter,
-                };
+                for (const colId of value.source['rolesIndex']['legend']) {
+                    dataModel.categoricalLegendData[colId] = {
+                        name: value.source.displayName,
+                        values: value.values,
+                        metaDataColumn: value.source,
+                        type: value.source.type.text ? FilterType.stringFilter : FilterType.numberFilter,
+                    };
+                }
             }
             if (roles.filterLegend) {
                 if (value.source.type.text || value.source.type.numeric) {
@@ -350,7 +354,7 @@ export class DataModel {
     xData: XAxisData;
     yData: YAxisData[];
     tooltipData: TooltipColumnData[];
-    categoricalLegendData: LegendData;
+    categoricalLegendData: LegendData[];
     filterLegendData: LegendData[];
     overlayWidth: OverlayWidthColumn[];
     overlayLength: number[];
@@ -378,6 +382,7 @@ export class DataModel {
         this.overlayY = [];
         this.visualOverlayRectangles = [];
         this.plotSettingsArray = [];
+        this.categoricalLegendData = [];
     }
 
     setPlotSettings(colorPalette: ISandboxExtendedColorPalette) {
@@ -403,7 +408,7 @@ export class DataModel {
             this.plotSettingsArray.push({
                 fill: getPlotFillColor(yColumnObjects, colorPalette, '#4292c6'),
                 plotType: PlotType[getValue<string>(yColumnObjects, Settings.plotSettings, PlotSettingsNames.plotType, PlotType.LinePlot)],
-                useLegendColor: getValue<boolean>(yColumnObjects, Settings.plotSettings, PlotSettingsNames.useLegendColor, false),
+                legendColorColumnIndex: getValue<number>(yColumnObjects, Settings.plotSettings, PlotSettingsNames.legendColorColumn, 0),
                 showHeatmap: <boolean>getValue(yColumnObjects, Settings.plotSettings, PlotSettingsNames.showHeatmap, false),
                 plotTitle: plotTitle,
                 overlayType: OverlayType[getValue<string>(yColumnObjects, Settings.plotSettings, PlotSettingsNames.overlayType, OverlayType.None)],
