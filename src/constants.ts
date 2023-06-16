@@ -138,4 +138,5 @@ export class ArrayConstants {
 
 export class NumberConstants {
     static readonly legendDeselectionOpacity = 0.3;
+    static readonly plotOverlayFillOpacity = 0.3;
 }

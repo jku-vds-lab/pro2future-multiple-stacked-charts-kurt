@@ -732,7 +732,10 @@ function addPlotSettingsGroup(plotModel: PlotModel, plotCard: powerbi.visuals.Fo
                         },
 
                         value: plotModel.plotSettings.overlayCategoryIndex,
-                        items: viewModel.plotOverlayCategoryNames.map((name, i) => <powerbi.IEnumMember>{ displayName: name, value: i }),
+                        items: [
+                            { displayName: 'None', value: 0 },
+                            ...viewModel.plotOverlayCategoryLegends.map((legend, i) => <powerbi.IEnumMember>{ displayName: legend.legendTitle, value: i + 1 }),
+                        ],
                     },
                 },
             },
