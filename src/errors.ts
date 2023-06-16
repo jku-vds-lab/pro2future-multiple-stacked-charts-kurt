@@ -127,7 +127,7 @@ export class PlotLegendError extends ParseAndTransformError {
      */
     constructor(plotName: string) {
         const name = 'Plot Legend Error';
-        const message = `There is legend no data but legend colors are set to be used by ${plotName}. Please add legend data in the field pane.`;
+        const message = `The legend column selected by ${plotName} does not exist in the field pane. Please add a data column in the field pane.`;
         super(message, name);
     }
 }

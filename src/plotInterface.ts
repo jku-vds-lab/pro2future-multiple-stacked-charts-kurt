@@ -141,7 +141,7 @@ export interface PlotModel {
     plotHeight: number;
     plotSettings: PlotSettings;
     dataPoints: DataPoint[];
-
+    legendXPos: number;
     d3Plot: D3Plot;
     metaDataColumn: powerbi.DataViewMetadataColumn;
 }
@@ -227,7 +227,7 @@ export interface ColorSettings {
 export interface PlotSettings {
     fill: string;
     plotType: PlotType;
-    useLegendColor: boolean;
+    legendColorColumnIndex: number;
     showHeatmap: boolean;
     plotHeightFactor: number;
     plotTitle: string;

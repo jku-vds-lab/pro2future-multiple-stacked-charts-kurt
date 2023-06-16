@@ -49,6 +49,7 @@ export class ViewModel {
     generalPlotSettings: GeneralPlotSettings;
     tooltipModels: TooltipModel[];
     zoomingSettings: ZoomingSettings;
+    categoricalLegends: Legend[];
     legends: Legends;
     visualOverlayRectangles: VisualOverlayRectangles;
     errors: ParseAndTransformError[];
@@ -58,12 +59,12 @@ export class ViewModel {
         this.objects = objects;
         this.legends = new Legends();
         this.tooltipModels = [];
+        this.categoricalLegends = [];
     }
 
     createLegends(dataModel: DataModel) {
-        if (dataModel.categoricalLegendData != null) {
-            this.createCategoricalLegend(dataModel);
-        }
+        this.createCategoricalLegends(dataModel);
+
         if (dataModel.filterLegendData.length > 0) {
             this.createFilterLegends(dataModel);
         }
@@ -113,47 +114,47 @@ export class ViewModel {
         };
     }
 
-    createCategoricalLegend(dataModel: DataModel) {
-        const legendSet = new Set(dataModel.categoricalLegendData.values.map((x) => (x ? x.toString() : null)));
-        legendSet.delete(null);
-        legendSet.delete('');
-        const legendColors = ArrayConstants.legendColors;
-        const randomColors = ArrayConstants.colorArray;
-        const legendValues = Array.from(legendSet).sort();
-        const categoricalLegend = <Legend>{
-            legendDataPoints: dataModel.categoricalLegendData.values
-                .map(
-                    (val, i) =>
-                        <LegendDataPoint>{
-                            yValue: val,
-                            i,
-                        }
-                )
-                .filter((x) => x.yValue !== null && x.yValue !== ''),
-            legendValues: [],
-            legendTitle: <string>(
-                getValue(
-                    dataModel.categoricalLegendData.metaDataColumn.objects,
-                    Settings.legendSettings,
-                    LegendSettingsNames.legendTitle,
-                    dataModel.categoricalLegendData.metaDataColumn.displayName
-                )
-            ),
-            legendXEndPosition: 0,
-            legendXPosition: MarginSettings.margins.left,
-            type: FilterType.colorFilter,
-            selectedValues: new Set(legendValues.concat(Object.keys(ArrayConstants.legendColors))),
-            metaDataColumn: dataModel.categoricalLegendData.metaDataColumn,
-        };
-        for (let i = 0; i < legendValues.length; i++) {
-            const val = legendValues[i] + '';
-            const defaultColor = legendColors[val] ? legendColors[val] : randomColors[i];
-            categoricalLegend.legendValues.push({
-                color: defaultColor,
-                value: val,
+    createCategoricalLegends(dataModel: DataModel) {
+        for (const legendData of dataModel.categoricalLegendData) {
+            const legendSet = new Set(legendData.values.map((x) => (x !== null || x !== undefined ? x.toString() : null)));
+            legendSet.delete(null);
+            legendSet.delete('');
+            const legendColors = ArrayConstants.legendColors;
+            const randomColors = ArrayConstants.colorArray;
+            const legendValues = Array.from(legendSet).sort((a, b) => {
+                if (Number(a) && Number(b)) {
+                    return Number(a) - Number(b);
+                }
+                return a.localeCompare(b);
             });
+            const categoricalLegend = <Legend>{
+                legendDataPoints: legendData.values
+                    .map(
+                        (val, i) =>
+                            <LegendDataPoint>{
+                                yValue: val,
+                                i,
+                            }
+                    )
+                    .filter((x) => x.yValue !== null && x.yValue !== ''),
+                legendValues: [],
+                legendTitle: <string>getValue(legendData.metaDataColumn.objects, Settings.legendSettings, LegendSettingsNames.legendTitle, legendData.metaDataColumn.displayName),
+                legendXEndPosition: 0,
+                legendXPosition: MarginSettings.margins.left,
+                type: FilterType.colorFilter,
+                selectedValues: new Set(legendValues.concat(Object.keys(ArrayConstants.legendColors))),
+                metaDataColumn: legendData.metaDataColumn,
+            };
+            for (let i = 0; i < legendValues.length; i++) {
+                const val = legendValues[i] + '';
+                const defaultColor = legendColors[val] ? legendColors[val] : randomColors[i];
+                categoricalLegend.legendValues.push({
+                    color: defaultColor,
+                    value: val,
+                });
+            }
+            this.categoricalLegends.push(categoricalLegend);
         }
-        this.legends.legends.push(categoricalLegend);
     }
 
     setSettings(dataModel: DataModel, options: VisualUpdateOptions) {
@@ -189,7 +190,7 @@ export class ViewModel {
         const heatmapCount = dataModel.plotSettingsArray.filter((x) => x.showHeatmap).length;
         const plotHeightFactorSum = dataModel.plotSettingsArray.map((x) => x.plotHeightFactor).reduce((a, b) => a + b);
         const plotCount = dataModel.plotSettingsArray.length;
-        const plotLegendCount = dataModel.plotSettingsArray.filter((x) => x.overlayCategoryIndex > 0).length; //TODO: add categorical legend
+        const plotLegendCount = dataModel.plotSettingsArray.filter((x) => x.overlayCategoryIndex > 0 || x.legendColorColumnIndex > 0).length;
         let plotHeightSpace: number =
             (this.svgHeight -
                 MarginSettings.svgTopPadding -
@@ -265,10 +266,9 @@ export class ViewModel {
                 if (!yDataPoints[pointNr]) continue;
                 let color = plotSettings.fill;
                 const xVal = xDataPoints[pointNr];
-                if (plotSettings.useLegendColor) {
-                    const filtered = this.legends.legends.filter((x) => x.type === FilterType.colorFilter);
-                    if (filtered.length === 1) {
-                        const categoricalLegend = filtered[0];
+                if (plotSettings.legendColorColumnIndex > 0) {
+                    if (this.categoricalLegends.length >= plotSettings.legendColorColumnIndex) {
+                        const categoricalLegend = this.categoricalLegends[plotSettings.legendColorColumnIndex - 1];
                         const dataPointLegendValue = categoricalLegend.legendDataPoints.find((x) => x.i === pointNr)?.yValue;
                         const legendValue = categoricalLegend.legendValues.find((x) => dataPointLegendValue && x.value === dataPointLegendValue.toString());
                         if (dataPointLegendValue && legendValue) color = legendValue.color;
@@ -300,6 +300,7 @@ export class ViewModel {
                 d3Plot: null,
                 metaDataColumn: metaDataColumn,
                 plotHeight: plotSettings.plotHeightFactor * this.generalPlotSettings.plotHeight,
+                legendXPos: 0,
             };
             plotModel.plotSettings.yRange.min = plotModel.plotSettings.yRange.minFixed ? plotModel.plotSettings.yRange.min : Math.min(...yDataPoints);
             plotModel.plotSettings.yRange.max = plotModel.plotSettings.yRange.maxFixed ? plotModel.plotSettings.yRange.max : Math.max(...yDataPoints);
@@ -308,7 +309,7 @@ export class ViewModel {
             plotTop = formatXAxis.labels && formatXAxis.ticks ? plotTop + MarginSettings.xLabelSpace : plotTop;
             plotTop += plotModel.plotHeight + MarginSettings.margins.top + MarginSettings.margins.bottom;
             plotTop += plotModel.plotSettings.showHeatmap ? Heatmapmargins.heatmapSpace : 0;
-            plotTop += plotModel.plotSettings.overlayCategoryIndex > 0 ? MarginSettings.legendHeight : 0; //TODO: add categorical legend
+            plotTop += plotModel.plotSettings.overlayCategoryIndex > 0 || plotModel.plotSettings.legendColorColumnIndex > 0 ? MarginSettings.legendHeight : 0;
         }
 
         this.generalPlotSettings.legendYPostion = plotTop + MarginSettings.legendTopMargin;
@@ -370,7 +371,7 @@ export class ViewModel {
                                 return 'white';
                             }
                         }),
-                    ], //TODO
+                    ],
                 };
             }
             overlayRectangles = overlayRectangles.filter((x) =>

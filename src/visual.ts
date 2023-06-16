@@ -203,6 +203,13 @@ export class Visual implements IVisual {
     }
 
     private drawLegends() {
+        for (const categoricalLegend of this.viewModel.categoricalLegends) {
+            if (this.legendDeselected.has(categoricalLegend.legendTitle)) {
+                Array.from(this.legendDeselected.get(categoricalLegend.legendTitle)).map((x) => categoricalLegend.selectedValues.delete(x));
+            } else {
+                this.legendDeselected.set(categoricalLegend.legendTitle, new Set<Primitive>());
+            }
+        }
         const legends = this.viewModel.legends;
         if (legends && legends.legends.length > 0) {
             legends.setDeselectedValues(this.legendDeselected);
@@ -219,12 +226,14 @@ export class Visual implements IVisual {
         }
     }
 
-    private drawLegend(legend: Legend) {
-        const yPosition = this.viewModel.generalPlotSettings.legendYPostion;
-        const className = Constants.categoricalLegendClass + Math.trunc(legend.legendXPosition);
+    private drawLegend(legend: Legend, plotModel: PlotModel = null): number {
+        const yPosition = plotModel
+            ? plotModel.plotTop + this.getYTransition(plotModel, plotModel.plotSettings.showHeatmap) + MarginSettings.legendHeight * 0.5
+            : this.viewModel.generalPlotSettings.legendYPostion;
+        const className = plotModel ? plotModel.plotSettings.plotType + plotModel.plotId : Constants.categoricalLegendClass + Math.trunc(legend.legendXPosition);
         const dotsXPositions = [];
-        let xPos = legend.legendXPosition;
-        xPos = this.drawLegendTitle(legend.legendTitle, className + legend.type, xPos, yPosition);
+        let xPos = plotModel ? plotModel.legendXPos : legend.legendXPosition;
+        xPos = this.drawLegendTitle(legend.legendTitle, className + ' ' + className + legend.type, xPos, yPosition);
         if (legend.type === FilterType.booleanFilter) {
             this.addBooleanLegendClickHandler(legend);
         } else {
@@ -233,7 +242,9 @@ export class Visual implements IVisual {
             this.addLegendValuesClickHandler(className, legend);
         }
         legend.legendXEndPosition = xPos;
+
         this.checkOutOfSvg(xPos);
+        return xPos;
     }
 
     private addLegendValuesClickHandler(className: string, legend: Legend) {
@@ -254,7 +265,7 @@ export class Visual implements IVisual {
                 selection.style('opacity', 1);
             }
             for (const plotModel of <PlotModel[]>this.viewModel.plotModels) {
-                if (plotModel.plotSettings.useLegendColor) {
+                if (plotModel.plotSettings.legendColorColumnIndex > 0) {
                     this.svg.selectAll('.' + plotModel.plotSettings.plotType + plotModel.plotId).remove();
                     this.drawPlot(plotModel);
                 }
@@ -264,7 +275,7 @@ export class Visual implements IVisual {
 
     private drawLegendDots(legendValues: LegendValue[], dotsXPositions: number[], yPosition: number, className: string, selection?: Set<Primitive>, opacity?: number) {
         const s = this.svg
-            .selectAll('legendDots')
+            .selectAll('legendDots' + className)
             .data(legendValues)
             .enter()
             .append('circle')
@@ -287,7 +298,7 @@ export class Visual implements IVisual {
 
     private drawLegendTexts(legendValues: LegendValue[], className: string, xPos: number, dotsXPositions: number[], yPosition: number, selection: Set<Primitive>) {
         this.svg
-            .selectAll('legendText')
+            .selectAll('legendText' + className)
             .data(legendValues)
             .enter()
             .append('text')
@@ -328,7 +339,7 @@ export class Visual implements IVisual {
                 this.legendDeselected.get(legend.legendTitle).delete(def);
             }
             for (const plotModel of <PlotModel[]>this.viewModel.plotModels) {
-                if (plotModel.plotSettings.useLegendColor) {
+                if (plotModel.plotSettings.overlayCategoryIndex > 0) {
                     this.svg.selectAll('.' + plotModel.plotSettings.plotType + plotModel.plotId).remove();
                     this.drawPlot(plotModel);
                 }
@@ -364,7 +375,6 @@ export class Visual implements IVisual {
     }
 
     private restoreZoomState() {
-        //TODO: publish on AppSource to save zoom state https://learn.microsoft.com/en-us/power-bi/developer/visuals/local-storage
         const svg = this.svg;
         const zoom = this.zoom;
         this.storage
@@ -439,20 +449,15 @@ export class Visual implements IVisual {
             return err(new PLotOverlayCategorySelectionError(plotModel.yName));
         }
         const legend = this.viewModel.plotOverlayCategoryLegends[plotModel.plotSettings.overlayCategoryIndex - 1];
-
         const yPosition = plotModel.plotTop + this.getYTransition(plotModel, plotModel.plotSettings.showHeatmap) + margins.legendHeight * 0.5;
-        // const legendCount = this.viewModel.legends.legends.length;
-        //TODO: change x for plot
-        let xPos = margins.margins.left + 50; //legendCount > 0 ? this.viewModel.legends.legends[legendCount - 1].legendXEndPosition + MarginSettings.legendSeparationMargin :
-        // if (this.viewModel.legends.legends.length > 0) {
-        //     xPos = this.viewModel.legends.legends[this.viewModel.legends.legends.length - 1].legendXEndPosition + MarginSettings.legendSeparationMargin;
-        // }
+        let xPos = plotModel.legendXPos;
         const className = plotModel.plotSettings.plotType + plotModel.plotId;
         const dotsXPosition = [];
         xPos = this.drawLegendTitle(legend.legendTitle, className, xPos, yPosition, selectionID);
         xPos = this.drawLegendTexts(legend.legendValues, className, xPos, dotsXPosition, yPosition, new Set(legend.legendValues.map((x) => x.value)));
-        this.drawLegendDots(legend.legendValues, dotsXPosition, yPosition, '', null, NumberConstants.plotOverlayFillOpacity);
+        this.drawLegendDots(legend.legendValues, dotsXPosition, yPosition, className, null, NumberConstants.plotOverlayFillOpacity);
         this.checkOutOfSvg(xPos);
+        plotModel.legendXPos = xPos + MarginSettings.legendSeparationMargin;
         return ok(null);
     }
 
@@ -519,6 +524,14 @@ export class Visual implements IVisual {
         this.addPlotTitle(plotModel, root).mapErr((err) => (plotError = err));
         this.addVerticalRuler(root, plotModel.plotHeight).mapErr((err) => (plotError = err));
         this.drawPlotOverlay(plotModel).mapErr((err) => (plotError = err));
+        if (plotModel.plotSettings.legendColorColumnIndex > 0) {
+            plotModel.legendXPos =
+                this.drawLegend(this.viewModel.categoricalLegends[plotModel.plotSettings.legendColorColumnIndex - 1], plotModel) + MarginSettings.legendSeparationMargin;
+        }
+
+        if (plotModel.plotSettings.overlayCategoryIndex > 0) {
+            this.drawPlotOverlayLegend(plotModel).mapErr((err) => (plotError = err));
+        }
         if (plotError) {
             return err(plotError);
         }
@@ -696,11 +709,7 @@ export class Visual implements IVisual {
             const plot = plotModel.d3Plot.root;
             const xScale = this.viewModel.generalPlotSettings.xAxisSettings.xScaleZoomed;
             const yScale = plotModel.d3Plot.y.yScaleZoomed;
-            let error = null;
-            if (overlayCategoryIndex > 0) {
-                this.drawPlotOverlayLegend(plotModel).mapErr((err) => (error = err));
-                if (error) return err(error);
-            }
+
             if (overlaytype != OverlayType.None && overlayRectangles != null) {
                 if (overlayRectangles.length == 0) {
                     return err(new OverlayInformationError());
@@ -774,6 +783,7 @@ export class Visual implements IVisual {
 
     private drawPlot(plotModel: PlotModel): Result<void, PlotError> {
         try {
+            plotModel.legendXPos = MarginSettings.margins.left + MarginSettings.legendLeftIndent;
             let dotSize = 2;
             let plotError: PlotError;
             const xAxisSettings = this.viewModel.generalPlotSettings.xAxisSettings;
@@ -786,8 +796,16 @@ export class Visual implements IVisual {
             let dataPoints = plotModel.dataPoints;
             dataPoints = filterNullValues(dataPoints);
 
-            if (plotModel.plotSettings.useLegendColor) {
-                dataPoints = dataPoints.filter((x) => this.viewModel.legends.drawDataPoint(x.pointNr));
+            if (plotModel.plotSettings.legendColorColumnIndex > 0 && this.viewModel.categoricalLegends.length >= plotModel.plotSettings.legendColorColumnIndex) {
+                const categoricalLegend = this.viewModel.categoricalLegends[plotModel.plotSettings.legendColorColumnIndex - 1];
+                dataPoints = dataPoints.filter((x) => {
+                    let draw = this.viewModel.legends.drawDataPoint(x.pointNr);
+                    const filtered = categoricalLegend.legendDataPoints.filter((lp) => lp.i === x.pointNr);
+                    if (filtered.length > 0) {
+                        draw = draw && categoricalLegend.selectedValues.has(filtered[0].yValue.toString());
+                    }
+                    return draw;
+                });
                 dotSize = 3;
             }
             if (this.viewModel.generalPlotSettings.showYZeroLine) {
