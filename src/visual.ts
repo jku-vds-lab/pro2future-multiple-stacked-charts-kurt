@@ -708,7 +708,6 @@ export class Visual implements IVisual {
             const plot = plotModel.d3Plot.root;
             const xScale = this.viewModel.generalPlotSettings.xAxisSettings.xScaleZoomed;
             const yScale = plotModel.d3Plot.y.yScaleZoomed;
-
             if (overlaytype != OverlayType.None && overlayRectangles != null) {
                 if (overlayRectangles.length == 0) {
                     return err(new OverlayInformationError());
