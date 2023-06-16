@@ -544,6 +544,11 @@
                         "numeric": true
                     }
                 },
+                "overlayCategoryColumn": {
+                    "type": {
+                        "numeric": true
+                    }
+                },
                 "centerOverlay": {
                     "displayName": "Center Overlay",
                     "type": {

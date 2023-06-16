@@ -243,6 +243,7 @@ export interface PlotSettings {
     plotTitle: string;
     overlayType: OverlayType;
     overlayWidthIndex: number;
+    overlayCategoryIndex: number;
     centerOverlay: boolean;
     xAxis: AxisInformationInterface;
     yAxis: AxisInformationInterface;
