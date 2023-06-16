@@ -35,6 +35,7 @@ import {
     XAxisSettings,
     YAxisData,
     ZoomingSettings,
+    LegendData,
 } from './plotInterface';
 
 export class ViewModel {
@@ -42,6 +43,7 @@ export class ViewModel {
     colorSettings: ColorSettings;
     plotOverlayRectangles?: OverlayRectangle[];
     plotOverlayWidthColumnNames: string[];
+    plotOverlayCategoryLegends: Legend[];
     svgHeight: number;
     svgWidth: number;
     generalPlotSettings: GeneralPlotSettings;
@@ -70,41 +72,45 @@ export class ViewModel {
     createFilterLegends(dataModel: DataModel) {
         for (let i = 0; i < dataModel.filterLegendData.length; i++) {
             const data = dataModel.filterLegendData[i];
-            const legendSet = new Set<Primitive>(data.values.map((x) => (x !== null && x !== undefined ? x.toString() : x)));
-            const defaultLegendName = data.metaDataColumn.displayName;
-
-            if (legendSet.has(null)) {
-                legendSet.delete(null);
-            }
-            if ((legendSet.size === 1 && (legendSet.has('0') || legendSet.has('1'))) || (legendSet.size === 2 && legendSet.has('0') && legendSet.has('1'))) {
-                data.type = FilterType.booleanFilter;
-            }
-            const legendValues = Array.from(legendSet).sort();
-
-            this.legends.legends.push(<Legend>{
-                legendDataPoints: data.values
-                    .map(
-                        (val, i) =>
-                            <LegendDataPoint>{
-                                yValue: val,
-                                i: i,
-                            }
-                    )
-                    .filter((x) => x.yValue !== null && x.yValue !== ''),
-                legendValues: legendValues.map((val) => {
-                    return <LegendValue>{
-                        color: 'white',
-                        value: val,
-                    };
-                }),
-                legendTitle: <string>getValue(data.metaDataColumn.objects, Settings.legendSettings, LegendSettingsNames.legendTitle, defaultLegendName),
-                legendXEndPosition: 0,
-                legendXPosition: MarginSettings.margins.left,
-                type: data.type,
-                selectedValues: legendSet,
-                metaDataColumn: data.metaDataColumn,
-            });
+            this.legends.legends.push(this.createFilterLegend(data));
         }
+    }
+
+    private createFilterLegend(data: LegendData, useColors = false): Legend {
+        const legendSet = new Set<Primitive>(data.values.map((x) => (x !== null && x !== undefined ? x.toString() : x)));
+        const defaultLegendName = data.metaDataColumn.displayName;
+
+        if (legendSet.has(null)) {
+            legendSet.delete(null);
+        }
+        if ((legendSet.size === 1 && (legendSet.has('0') || legendSet.has('1'))) || (legendSet.size === 2 && legendSet.has('0') && legendSet.has('1'))) {
+            data.type = FilterType.booleanFilter;
+        }
+        const legendValues = Array.from(legendSet).sort();
+
+        return <Legend>{
+            legendDataPoints: data.values
+                .map(
+                    (val, i) =>
+                        <LegendDataPoint>{
+                            yValue: val,
+                            i: i,
+                        }
+                )
+                .filter((x) => x.yValue !== null && x.yValue !== ''),
+            legendValues: legendValues.map((val, i) => {
+                return <LegendValue>{
+                    color: useColors ? ArrayConstants.colorArray[i % ArrayConstants.colorArray.length] : 'white',
+                    value: val,
+                };
+            }),
+            legendTitle: <string>getValue(data.metaDataColumn.objects, Settings.legendSettings, LegendSettingsNames.legendTitle, defaultLegendName),
+            legendXEndPosition: 0,
+            legendXPosition: MarginSettings.margins.left,
+            type: data.type,
+            selectedValues: legendSet,
+            metaDataColumn: data.metaDataColumn,
+        };
     }
 
     createCategoricalLegend(dataModel: DataModel) {
@@ -183,6 +189,7 @@ export class ViewModel {
         const heatmapCount = dataModel.plotSettingsArray.filter((x) => x.showHeatmap).length;
         const plotHeightFactorSum = dataModel.plotSettingsArray.map((x) => x.plotHeightFactor).reduce((a, b) => a + b);
         const plotCount = dataModel.plotSettingsArray.length;
+        const plotLegendCount = dataModel.plotSettingsArray.filter((x) => x.overlayCategoryIndex > 0).length; //TODO: add categorical legend
         let plotHeightSpace: number =
             (this.svgHeight -
                 MarginSettings.svgTopPadding -
@@ -191,6 +198,7 @@ export class ViewModel {
                 MarginSettings.plotTitleHeight * plotTitlesCount -
                 MarginSettings.xLabelSpace * xLabelsCount -
                 Heatmapmargins.heatmapSpace * heatmapCount -
+                MarginSettings.legendHeight * plotLegendCount -
                 (MarginSettings.margins.top + MarginSettings.margins.bottom) * plotCount) /
             plotHeightFactorSum;
         if (plotHeightSpace < minPlotHeight) {
@@ -300,13 +308,13 @@ export class ViewModel {
             plotTop = formatXAxis.labels && formatXAxis.ticks ? plotTop + MarginSettings.xLabelSpace : plotTop;
             plotTop += plotModel.plotHeight + MarginSettings.margins.top + MarginSettings.margins.bottom;
             plotTop += plotModel.plotSettings.showHeatmap ? Heatmapmargins.heatmapSpace : 0;
+            plotTop += plotModel.plotSettings.overlayCategoryIndex > 0 ? MarginSettings.legendHeight : 0; //TODO: add categorical legend
         }
 
         this.generalPlotSettings.legendYPostion = plotTop + MarginSettings.legendTopMargin;
     }
 
     createVisualOverlayRectangles(dataModel: DataModel) {
-        this.plotOverlayWidthColumnNames = dataModel.overlayWidth.map((column) => column.columnName);
         if (dataModel.visualOverlayRectangles.length > 0) {
             const visualOverlayYPos = this.plotModels[0].plotTop;
             const visualOverlayHeight = this.plotModels[this.plotModels.length - 1].plotTop + this.generalPlotSettings.plotHeight - visualOverlayYPos;
@@ -323,6 +331,12 @@ export class ViewModel {
     }
 
     createPlotOverlayInformation(dataModel: DataModel): Result<void, OverlayDataError> {
+        this.plotOverlayCategoryLegends = [];
+        for (const column of dataModel.overlayCategory) {
+            this.plotOverlayCategoryLegends.push(this.createFilterLegend(column, true));
+        }
+
+        this.plotOverlayWidthColumnNames = dataModel.overlayWidth.map((column) => column.columnName);
         if (dataModel.overlayWidth.length > 0 && dataModel.overlayLength.length == dataModel.overlayWidth[0].values.length && dataModel.overlayLength.length > 0) {
             const xValues = dataModel.xData.values;
             let overlayRectangles: OverlayRectangle[] = new Array<OverlayRectangle>(dataModel.overlayLength.length);
@@ -346,6 +360,17 @@ export class ViewModel {
                     endX: endX,
                     y: y,
                     x: xAxisSettings.axisBreak ? xAxisSettings.indexMap.get(xValues[i]) : xValues[i],
+                    color: [
+                        'transparent',
+                        ...this.plotOverlayCategoryLegends.map((l) => {
+                            const filtered = l.legendValues.filter((val) => val.value === l.legendDataPoints[i].yValue);
+                            if (filtered.length === 1) {
+                                return filtered[0].color;
+                            } else {
+                                return 'white';
+                            }
+                        }),
+                    ], //TODO
                 };
             }
             overlayRectangles = overlayRectangles.filter((x) =>

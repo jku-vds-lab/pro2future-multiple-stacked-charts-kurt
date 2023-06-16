@@ -720,6 +720,26 @@ function addPlotSettingsGroup(plotModel: PlotModel, plotCard: powerbi.visuals.Fo
                 },
             },
             {
+                displayName: 'Overlay Category', //TODO
+                uid: groupName + PlotSettingsNames.overlayCategoryColumn + Constants.uid,
+                control: {
+                    type: powerbi.visuals.FormattingComponent.Dropdown,
+                    properties: {
+                        descriptor: {
+                            objectName: Settings.plotSettings,
+                            propertyName: PlotSettingsNames.overlayCategoryColumn,
+                            selector: { metadata: plotModel.metaDataColumn.queryName },
+                        },
+
+                        value: plotModel.plotSettings.overlayCategoryIndex,
+                        items: [
+                            { displayName: 'None', value: 0 },
+                            ...viewModel.plotOverlayCategoryLegends.map((legend, i) => <powerbi.IEnumMember>{ displayName: legend.legendTitle, value: i + 1 }),
+                        ],
+                    },
+                },
+            },
+            {
                 displayName: 'Plot Height Factor',
                 uid: groupName + PlotSettingsNames.plotHeightFactor + Constants.uid,
                 control: {

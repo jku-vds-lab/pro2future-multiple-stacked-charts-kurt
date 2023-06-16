@@ -128,6 +128,16 @@ function getCategoricalData(categorical: powerbi.DataViewCategorical, dataModel:
             if (roles.overlayY) {
                 dataModel.overlayY = <number[]>category.values;
             }
+            if (roles.overlayCategory) {
+                for (const colId of category.source['rolesIndex']['overlayCategory']) {
+                    dataModel.overlayCategory[colId] = {
+                        values: category.values,
+                        name: category.source.displayName,
+                        metaDataColumn: category.source,
+                        type: FilterType.noFilter,
+                    };
+                }
+            }
             if (roles.tooltip) {
                 const columnId = category.source.index;
                 for (const tooltipId of category.source['rolesIndex']['tooltip']) {
@@ -212,6 +222,16 @@ function getMeasureData(categorical: powerbi.DataViewCategorical, dataModel: Dat
             }
             if (roles.overlayY) {
                 dataModel.overlayY = <number[]>(value.highlights ? value.highlights : value.values);
+            }
+            if (roles.overlayCategory) {
+                for (const colId of value.source['rolesIndex']['overlayCategory']) {
+                    dataModel.overlayCategory[colId] = <LegendData>{
+                        type: FilterType.noFilter,
+                        metaDataColumn: value.source,
+                        values: value.highlights ? value.highlights : value.values,
+                        name: value.source.displayName,
+                    };
+                }
             }
             if (roles.tooltip) {
                 const columnId = value.source.index;
@@ -334,6 +354,7 @@ export class DataModel {
     filterLegendData: LegendData[];
     overlayWidth: OverlayWidthColumn[];
     overlayLength: number[];
+    overlayCategory: LegendData[];
     overlayY: number[];
     visualOverlayRectangles: Primitive[];
     visualOverlayMetadataColumn: powerbi.DataViewMetadataColumn;
@@ -353,6 +374,7 @@ export class DataModel {
         this.filterLegendData = [];
         this.overlayLength = [];
         this.overlayWidth = [];
+        this.overlayCategory = [];
         this.overlayY = [];
         this.visualOverlayRectangles = [];
         this.plotSettingsArray = [];
@@ -387,6 +409,7 @@ export class DataModel {
                 overlayType: OverlayType[getValue<string>(yColumnObjects, Settings.plotSettings, PlotSettingsNames.overlayType, OverlayType.None)],
                 centerOverlay: <boolean>getValue(yColumnObjects, Settings.plotSettings, PlotSettingsNames.centerOverlay, false),
                 overlayWidthIndex: getValue<number>(yColumnObjects, Settings.plotSettings, PlotSettingsNames.overlayWidthColumn, 0),
+                overlayCategoryIndex: getValue<number>(yColumnObjects, Settings.plotSettings, PlotSettingsNames.overlayCategoryColumn, 0),
                 plotHeightFactor: getValue<number>(yColumnObjects, Settings.plotSettings, PlotSettingsNames.plotHeightFactor, 1),
                 xAxis: xAxisInformation,
                 yAxis: yAxisInformation,
@@ -400,7 +423,6 @@ export class DataModel {
                 },
             });
         }
-        console.log(this.plotSettingsArray[0].overlayWidthIndex);
     }
     private getAxisInformation(axisInformation: AxisInformation): Result<AxisInformationInterface, ParseAndTransformError> {
         switch (axisInformation) {

@@ -204,6 +204,30 @@ export class BuildYAxisError extends PlotError {
     }
 }
 
+export class DrawPLotOverlayError extends PlotError {
+    /**
+     *
+     */
+    constructor(stack?: string) {
+        const name = 'DrawPLotOverlayError';
+        const message = 'Error in drawing plot overlay. This should not have happended.';
+        super(message, name);
+        this.stack = stack;
+    }
+}
+
+export class PLotOverlayCategorySelectionError extends PlotError {
+    /**
+     *
+     */
+    constructor(plotName: string, stack?: string) {
+        const name = 'PLot Overlay Category Selection Error';
+        const message = 'Error in selecting category for plot ' + plotName + '. Please select another overlay category.';
+        super(message, name);
+        this.stack = stack;
+    }
+}
+
 export class OverlayInformationError extends PlotError {
     /**
      *
