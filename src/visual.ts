@@ -78,6 +78,8 @@ import {
     HeatmapError,
     PlotError,
     OverlayInformationError,
+    DrawPLotOverlayError,
+    PLotOverlayCategorySelectionError,
 } from './errors';
 import { Heatmapmargins, MarginSettings } from './marginSettings';
 import { Primitive } from 'd3';
@@ -430,9 +432,12 @@ export class Visual implements IVisual {
         }
     }
 
-    private drawPlotOverlayLegend(plotModel: PlotModel) {
+    private drawPlotOverlayLegend(plotModel: PlotModel): Result<void, PlotError> {
         const selectionID = Constants.VisualOverlayLegendTitleSelection + plotModel.plotId.toString();
         const margins = this.viewModel.generalPlotSettings;
+        if (this.viewModel.plotOverlayCategoryLegends.length < plotModel.plotSettings.overlayCategoryIndex) {
+            return err(new PLotOverlayCategorySelectionError(plotModel.yName));
+        }
         const legend = this.viewModel.plotOverlayCategoryLegends[plotModel.plotSettings.overlayCategoryIndex - 1];
 
         const yPosition = plotModel.plotTop + this.getYTransition(plotModel, plotModel.plotSettings.showHeatmap) + margins.legendHeight * 0.5;
@@ -448,6 +453,7 @@ export class Visual implements IVisual {
         xPos = this.drawLegendTexts(legend.legendValues, className, xPos, dotsXPosition, yPosition, new Set(legend.legendValues.map((x) => x.value)));
         this.drawLegendDots(legend.legendValues, dotsXPosition, yPosition, '', null, NumberConstants.plotOverlayFillOpacity);
         this.checkOutOfSvg(xPos);
+        return ok(null);
     }
 
     private drawVisualOverlayLegend() {
@@ -690,8 +696,10 @@ export class Visual implements IVisual {
             const plot = plotModel.d3Plot.root;
             const xScale = this.viewModel.generalPlotSettings.xAxisSettings.xScaleZoomed;
             const yScale = plotModel.d3Plot.y.yScaleZoomed;
+            let error = null;
             if (overlayCategoryIndex > 0) {
-                this.drawPlotOverlayLegend(plotModel);
+                this.drawPlotOverlayLegend(plotModel).mapErr((err) => (error = err));
+                if (error) return err(error);
             }
             if (overlaytype != OverlayType.None && overlayRectangles != null) {
                 if (overlayRectangles.length == 0) {
@@ -749,7 +757,7 @@ export class Visual implements IVisual {
             }
             return ok(null);
         } catch (error) {
-            return err(new BuildYAxisError(error.stack));
+            return err(new DrawPLotOverlayError(error.stack));
         }
     }
 
