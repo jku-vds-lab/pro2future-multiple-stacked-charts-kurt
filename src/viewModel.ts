@@ -196,7 +196,7 @@ export class ViewModel {
         const heatmapCount = dataModel.plotSettingsArray.filter((x) => x.showHeatmap).length;
         const plotHeightFactorSum = dataModel.plotSettingsArray.map((x) => x.plotHeightFactor).reduce((a, b) => a + b);
         const plotCount = dataModel.plotSettingsArray.length;
-        const plotLegendCount = dataModel.plotSettingsArray.filter((x) => x.overlayCategoryIndex > 0).length; //TODO: add categorical legend
+        const plotLegendCount = dataModel.plotSettingsArray.filter((x) => x.overlayCategoryIndex > 0 || x.legendColorColumnIndex > 0).length;
         let plotHeightSpace: number =
             (this.svgHeight -
                 MarginSettings.svgTopPadding -
@@ -306,7 +306,7 @@ export class ViewModel {
                 d3Plot: null,
                 metaDataColumn: metaDataColumn,
                 plotHeight: plotSettings.plotHeightFactor * this.generalPlotSettings.plotHeight,
-                legendXPos: MarginSettings.margins.left + MarginSettings.legendLeftIndent,
+                legendXPos: 0,
             };
             plotModel.plotSettings.yRange.min = plotModel.plotSettings.yRange.minFixed ? plotModel.plotSettings.yRange.min : Math.min(...yDataPoints);
             plotModel.plotSettings.yRange.max = plotModel.plotSettings.yRange.maxFixed ? plotModel.plotSettings.yRange.max : Math.max(...yDataPoints);
@@ -315,7 +315,7 @@ export class ViewModel {
             plotTop = formatXAxis.labels && formatXAxis.ticks ? plotTop + MarginSettings.xLabelSpace : plotTop;
             plotTop += plotModel.plotHeight + MarginSettings.margins.top + MarginSettings.margins.bottom;
             plotTop += plotModel.plotSettings.showHeatmap ? Heatmapmargins.heatmapSpace : 0;
-            plotTop += plotModel.plotSettings.overlayCategoryIndex > 0 ? MarginSettings.legendHeight : 0; //TODO: add categorical legend
+            plotTop += plotModel.plotSettings.overlayCategoryIndex > 0 || plotModel.plotSettings.legendColorColumnIndex > 0 ? MarginSettings.legendHeight : 0;
         }
 
         this.generalPlotSettings.legendYPostion = plotTop + MarginSettings.legendTopMargin;
@@ -385,7 +385,7 @@ export class ViewModel {
                                 return 'white';
                             }
                         }),
-                    ], //TODO
+                    ],
                 };
             }
             overlayRectangles = overlayRectangles.filter((x) =>
