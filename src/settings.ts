@@ -550,7 +550,7 @@ function createPlotSettingsCard() {
         },
         {
             objectName: Settings.plotSettings,
-            propertyName: PlotSettingsNames.useLegendColor,
+            propertyName: PlotSettingsNames.legendColorColumn,
         },
         {
             objectName: Settings.plotSettings,
@@ -567,6 +567,10 @@ function createPlotSettingsCard() {
         {
             objectName: Settings.plotSettings,
             propertyName: PlotSettingsNames.centerOverlay,
+        },
+        {
+            objectName: Settings.plotSettings,
+            propertyName: PlotSettingsNames.overlayCategoryColumn,
         },
         {
             objectName: Settings.plotSettings,
@@ -674,17 +678,22 @@ function addPlotSettingsGroup(plotModel: PlotModel, plotCard: powerbi.visuals.Fo
                 },
             },
             {
-                displayName: 'Use Categorical Legend Color',
-                uid: groupName + PlotSettingsNames.useLegendColor + Constants.uid,
+                displayName: 'Categorical Legend Color Column',
+                uid: groupName + PlotSettingsNames.legendColorColumn + Constants.uid,
                 control: {
-                    type: powerbi.visuals.FormattingComponent.ToggleSwitch,
+                    type: powerbi.visuals.FormattingComponent.Dropdown,
                     properties: {
                         descriptor: {
                             objectName: Settings.plotSettings,
-                            propertyName: PlotSettingsNames.useLegendColor,
+                            propertyName: PlotSettingsNames.legendColorColumn,
                             selector: { metadata: plotModel.metaDataColumn.queryName },
                         },
-                        value: plotModel.plotSettings.useLegendColor,
+
+                        value: plotModel.plotSettings.legendColorColumnIndex,
+                        items: [
+                            { displayName: 'None', value: 0 },
+                            ...viewModel.categoricalLegends.map((legend, i) => <powerbi.IEnumMember>{ displayName: legend.legendTitle, value: i + 1 }),
+                        ],
                     },
                 },
             },
@@ -753,7 +762,7 @@ function addPlotSettingsGroup(plotModel: PlotModel, plotCard: powerbi.visuals.Fo
                 },
             },
             {
-                displayName: 'Overlay Category', //TODO
+                displayName: 'Overlay Category',
                 uid: groupName + PlotSettingsNames.overlayCategoryColumn + Constants.uid,
                 control: {
                     type: powerbi.visuals.FormattingComponent.Dropdown,

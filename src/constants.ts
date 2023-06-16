@@ -28,7 +28,7 @@ export enum LegendSettingsNames {
 export enum PlotSettingsNames {
     plotType = 'plotType',
     fill = 'fill',
-    useLegendColor = 'useLegendColor',
+    legendColorColumn = 'legendColorColumn',
     showHeatmap = 'showHeatmap',
     plotTitle = 'plotTitle',
     overlayType = 'overlayType',
