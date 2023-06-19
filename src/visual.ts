@@ -444,12 +444,11 @@ export class Visual implements IVisual {
 
     private drawPlotOverlayLegend(plotModel: PlotModel): Result<void, PlotError> {
         const selectionID = Constants.VisualOverlayLegendTitleSelection + plotModel.plotId.toString();
-        const margins = this.viewModel.generalPlotSettings;
         if (this.viewModel.plotOverlayCategoryLegends.length < plotModel.plotSettings.overlayCategoryIndex) {
             return err(new PLotOverlayCategorySelectionError(plotModel.yName));
         }
         const legend = this.viewModel.plotOverlayCategoryLegends[plotModel.plotSettings.overlayCategoryIndex - 1];
-        const yPosition = plotModel.plotTop + this.getYTransition(plotModel, plotModel.plotSettings.showHeatmap) + margins.legendHeight * 0.5;
+        const yPosition = plotModel.plotTop + this.getYTransition(plotModel, plotModel.plotSettings.showHeatmap) + MarginSettings.legendHeight * 0.5;
         let xPos = plotModel.legendXPos;
         const className = plotModel.plotSettings.plotType + plotModel.plotId;
         const dotsXPosition = [];
