@@ -73,7 +73,7 @@ export interface GeneralPlotSettings {
     plotWidth: number;
     plotTitleHeight: number;
     fontSize: string;
-    legendHeight: number;
+    generalLegendHeight: number;
     legendYPostion: number;
     dotMargin: number;
     xScalePadding: number;
