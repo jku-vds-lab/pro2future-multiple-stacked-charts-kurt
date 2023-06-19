@@ -179,7 +179,7 @@ export class ViewModel {
     private setGeneralPlotSettings(dataModel: DataModel, options: VisualUpdateOptions) {
         this.svgHeight = options.viewport.height - MarginSettings.scrollbarSpace;
         this.svgWidth = options.viewport.width - MarginSettings.scrollbarSpace;
-        const legendHeight = this.legends.legends.length > 0 ? MarginSettings.legendHeight : 0;
+        const generalLegendHeight = this.legends.legends.length > 0 ? MarginSettings.legendHeight : 0;
         const minPlotHeight = getValue<number>(this.objects, Settings.generalSettings, GeneralSettingsNames.minPlotHeight, 40);
         if (this.svgHeight === undefined || this.svgWidth === undefined || !this.svgHeight || !this.svgWidth) {
             return err(new SVGSizeError());
@@ -195,7 +195,7 @@ export class ViewModel {
             (this.svgHeight -
                 MarginSettings.svgTopPadding -
                 MarginSettings.svgBottomPadding -
-                legendHeight -
+                generalLegendHeight -
                 MarginSettings.plotTitleHeight * plotTitlesCount -
                 MarginSettings.xLabelSpace * xLabelsCount -
                 Heatmapmargins.heatmapSpace * heatmapCount -
@@ -221,7 +221,7 @@ export class ViewModel {
             dotMargin: MarginSettings.dotMargin,
             plotHeight: plotHeightSpace,
             plotWidth: plotWidth,
-            legendHeight: legendHeight,
+            generalLegendHeight: generalLegendHeight,
             xScalePadding: 0.1,
             solidOpacity: 1,
             transparentOpacity: 1,
