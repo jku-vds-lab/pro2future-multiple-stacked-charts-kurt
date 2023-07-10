@@ -93,6 +93,7 @@ export interface GeneralPlotSettings {
     showYZeroLine: boolean;
     minPlotHeight: number;
     tooltipPrecision: number;
+    plotLegendXPosition: number;
 }
 
 export interface XAxisSettings {
@@ -149,7 +150,7 @@ export interface PlotModel {
     plotHeight: number;
     plotSettings: PlotSettings;
     dataPoints: DataPoint[];
-    legendXPos: number;
+    legendEndPos: number;
     d3Plot: D3Plot;
     metaDataColumn: powerbi.DataViewMetadataColumn;
 }
@@ -193,7 +194,7 @@ export interface Legend {
     legendDataPoints: LegendDataPoint[];
     legendValues: LegendValue[];
     legendTitle: string;
-    legendXEndPosition: number;
+    legendEndPosition: number;
     legendXPosition: number;
     type: FilterType;
     selectedValues: Set<Primitive>;

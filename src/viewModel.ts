@@ -106,7 +106,7 @@ export class ViewModel {
                 };
             }),
             legendTitle: <string>getValue(data.metaDataColumn.objects, Settings.legendSettings, LegendSettingsNames.legendTitle, defaultLegendName),
-            legendXEndPosition: 0,
+            legendEndPosition: 0,
             legendXPosition: MarginSettings.margins.left,
             type: data.type,
             selectedValues: legendSet,
@@ -144,7 +144,7 @@ export class ViewModel {
                     .filter((x) => x.yValue !== null && x.yValue !== ''),
                 legendValues: [],
                 legendTitle: <string>getValue(legendData.metaDataColumn.objects, Settings.legendSettings, LegendSettingsNames.legendTitle, legendData.metaDataColumn.displayName),
-                legendXEndPosition: 0,
+                legendEndPosition: 0,
                 legendXPosition: MarginSettings.margins.left,
                 type: FilterType.colorFilter,
                 selectedValues: new Set(legendValues.concat(Object.keys(ArrayConstants.legendColors))),
@@ -185,7 +185,8 @@ export class ViewModel {
     setGeneralPlotSettings(dataModel: DataModel, options: VisualUpdateOptions) {
         this.svgHeight = options.viewport.height - MarginSettings.scrollbarSpace;
         this.svgWidth = options.viewport.width - MarginSettings.scrollbarSpace;
-        const generalLegendHeight = this.legends.legends.length > 0 ? MarginSettings.legendHeight : 0;
+
+        const generalLegendHeight = this.legends.legends.length > 0 || dataModel.visualOverlayRectangles.length > 0 ? MarginSettings.legendHeight : 0;
         const minPlotHeight = getValue<number>(this.objects, Settings.generalSettings, GeneralSettingsNames.minPlotHeight, 40);
         if (this.svgHeight === undefined || this.svgWidth === undefined || !this.svgHeight || !this.svgWidth) {
             return err(new SVGSizeError());
@@ -239,6 +240,7 @@ export class ViewModel {
             heatmapBins: getValue<number>(this.objects, Settings.generalSettings, GeneralSettingsNames.heatmapBins, 100),
             minPlotHeight: minPlotHeight,
             showYZeroLine: getValue<boolean>(this.objects, Settings.generalSettings, GeneralSettingsNames.showYZeroLine, true),
+            plotLegendXPosition: plotWidth + Heatmapmargins.legendMargin,
         };
     }
 
@@ -306,7 +308,7 @@ export class ViewModel {
                 d3Plot: null,
                 metaDataColumn: metaDataColumn,
                 plotHeight: plotSettings.plotHeightFactor * this.generalPlotSettings.plotHeight,
-                legendXPos: 0,
+                legendEndPos: 0,
             };
             plotModel.plotSettings.yRange.min = plotModel.plotSettings.yRange.minFixed ? plotModel.plotSettings.yRange.min : Math.min(...yDataPoints);
             plotModel.plotSettings.yRange.max = plotModel.plotSettings.yRange.maxFixed ? plotModel.plotSettings.yRange.max : Math.max(...yDataPoints);
