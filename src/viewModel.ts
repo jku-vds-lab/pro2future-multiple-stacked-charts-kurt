@@ -12,7 +12,7 @@ import {
     XAxisBreakSettingsNames,
     ZoomingSettingsNames,
 } from './constants';
-import { OverlayDataError, ParseAndTransformError, PlotLegendError, SVGSizeError } from './errors';
+import { JSONParsingError, OverlayDataError, ParseAndTransformError, PlotLegendError, SVGSizeError } from './errors';
 import { Heatmapmargins, MarginSettings } from './marginSettings';
 import { getColorSettings, getValue } from './objectEnumerationUtility';
 import { DataModel, getMetadataColumn } from './parseAndTransform';
@@ -119,7 +119,12 @@ export class ViewModel {
             const legendSet = new Set(legendData.values.map((x) => (x !== null || x !== undefined ? x.toString() : null)));
             legendSet.delete(null);
             legendSet.delete('');
-            const legendColors = ArrayConstants.legendColors;
+            let legendColors = {};
+            try {
+                legendColors = JSON.parse(this.colorSettings.colorSettings.categoricalLegendColors);
+            } catch (error) {
+                this.errors.push(new JSONParsingError(error.message));
+            }
             const randomColors = ArrayConstants.colorArray;
             const legendValues = Array.from(legendSet).sort((a, b) => {
                 if (Number(a) && Number(b)) {
@@ -157,7 +162,7 @@ export class ViewModel {
         }
     }
 
-    setSettings(dataModel: DataModel, options: VisualUpdateOptions) {
+    setSettings(dataModel: DataModel) {
         const colorPalette = dataModel.host.colorPalette;
         this.zoomingSettings = <ZoomingSettings>{
             enableZoom: <boolean>getValue(this.objects, Settings.zoomingSettings, ZoomingSettingsNames.show, true),
@@ -170,13 +175,14 @@ export class ViewModel {
                 verticalRulerColor: getColorSettings(this.objects, ColorSettingsNames.verticalRulerColor, colorPalette, '#000000'),
                 overlayColor: getColorSettings(this.objects, ColorSettingsNames.overlayColor, colorPalette, '#000000'),
                 yZeroLineColor: getColorSettings(this.objects, ColorSettingsNames.yZeroLineColor, colorPalette, '#CCCCCC'),
+                categoricalLegendColors: <string>getValue(this.objects, Settings.colorSettings, ColorSettingsNames.categoricalLegendColors, '{ "color": "#000000" }'),
+                visualBackgroundColors: <string>getValue(this.objects, Settings.colorSettings, ColorSettingsNames.visualBackgroundColors, '{ "color": "#000000" }'),
                 heatmapColorScheme: <string>getValue(this.objects, Settings.colorSettings, ColorSettingsNames.heatmapColorScheme, 'interpolateBuGn'),
             },
         };
-        this.setGeneralPlotSettings(dataModel, options);
     }
 
-    private setGeneralPlotSettings(dataModel: DataModel, options: VisualUpdateOptions) {
+    setGeneralPlotSettings(dataModel: DataModel, options: VisualUpdateOptions) {
         this.svgHeight = options.viewport.height - MarginSettings.scrollbarSpace;
         this.svgWidth = options.viewport.width - MarginSettings.scrollbarSpace;
         const generalLegendHeight = this.legends.legends.length > 0 ? MarginSettings.legendHeight : 0;
@@ -319,6 +325,13 @@ export class ViewModel {
         if (dataModel.visualOverlayRectangles.length > 0) {
             const visualOverlayYPos = this.plotModels[0].plotTop;
             const visualOverlayHeight = this.plotModels[this.plotModels.length - 1].plotTop + this.generalPlotSettings.plotHeight - visualOverlayYPos;
+            let visualOverlayColorDict = [];
+            try {
+                visualOverlayColorDict = JSON.parse(this.colorSettings.colorSettings.visualBackgroundColors);
+            } catch (error) {
+                this.errors.push(new JSONParsingError(error.message));
+            }
+
             this.visualOverlayRectangles = new VisualOverlayRectangles(
                 this.generalPlotSettings.xAxisSettings.axisBreak
                     ? dataModel.xData.values.map((x) => this.generalPlotSettings.xAxisSettings.indexMap.get(x))
@@ -326,7 +339,8 @@ export class ViewModel {
                 dataModel.visualOverlayRectangles,
                 visualOverlayYPos,
                 visualOverlayHeight,
-                dataModel.visualOverlayMetadataColumn
+                dataModel.visualOverlayMetadataColumn,
+                visualOverlayColorDict
             );
         }
     }
