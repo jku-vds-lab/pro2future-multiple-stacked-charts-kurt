@@ -198,6 +198,7 @@ export class ViewModel {
         const plotHeightFactorSum = dataModel.plotSettingsArray.map((x) => x.plotHeightFactor).reduce((a, b) => a + b);
         const plotCount = dataModel.plotSettingsArray.length;
         const plotLegendCount = dataModel.plotSettingsArray.filter((x) => x.overlayCategoryIndex > 0 || x.legendColorColumnIndex > 0).length;
+        const plotLegendAndHeatmapCount = dataModel.plotSettingsArray.filter((x) => x.overlayCategoryIndex > 0 || (x.legendColorColumnIndex > 0 && x.showHeatmap)).length;
         let plotHeightSpace: number =
             (this.svgHeight -
                 MarginSettings.svgTopPadding -
@@ -206,7 +207,7 @@ export class ViewModel {
                 MarginSettings.plotTitleHeight * plotTitlesCount -
                 MarginSettings.xLabelSpace * xLabelsCount -
                 Heatmapmargins.heatmapSpace * heatmapCount -
-                MarginSettings.legendHeight * plotLegendCount -
+                //MarginSettings.legendHeight * plotLegendCount -
                 (MarginSettings.margins.top + MarginSettings.margins.bottom) * plotCount) /
             plotHeightFactorSum;
         if (plotHeightSpace < minPlotHeight) {
@@ -215,6 +216,12 @@ export class ViewModel {
             this.svgHeight = this.svgHeight + plotHeightFactorSum * plotSpaceDif;
         }
         let plotWidth: number = this.svgWidth - MarginSettings.margins.left - MarginSettings.margins.right;
+        if (plotLegendCount > 0) {
+            plotWidth -= MarginSettings.plotLegendSize;
+        }
+        if (plotLegendAndHeatmapCount > 0) {
+            plotWidth -= MarginSettings.heatmapLegendSize;
+        }
         if (plotWidth < MarginSettings.miniumumPlotWidth) {
             const widthDif = MarginSettings.miniumumPlotWidth - plotWidth;
             plotWidth = MarginSettings.miniumumPlotWidth;
@@ -240,7 +247,7 @@ export class ViewModel {
             heatmapBins: getValue<number>(this.objects, Settings.generalSettings, GeneralSettingsNames.heatmapBins, 100),
             minPlotHeight: minPlotHeight,
             showYZeroLine: getValue<boolean>(this.objects, Settings.generalSettings, GeneralSettingsNames.showYZeroLine, true),
-            plotLegendXPosition: plotWidth + Heatmapmargins.legendMargin,
+            plotLegendXPosition: MarginSettings.margins.left + plotWidth + Heatmapmargins.legendMargin,
         };
     }
 
@@ -317,7 +324,7 @@ export class ViewModel {
             plotTop = formatXAxis.labels && formatXAxis.ticks ? plotTop + MarginSettings.xLabelSpace : plotTop;
             plotTop += plotModel.plotHeight + MarginSettings.margins.top + MarginSettings.margins.bottom;
             plotTop += plotModel.plotSettings.showHeatmap ? Heatmapmargins.heatmapSpace : 0;
-            plotTop += plotModel.plotSettings.overlayCategoryIndex > 0 || plotModel.plotSettings.legendColorColumnIndex > 0 ? MarginSettings.legendHeight : 0;
+            //plotTop += plotModel.plotSettings.overlayCategoryIndex > 0 || plotModel.plotSettings.legendColorColumnIndex > 0 ? MarginSettings.legendHeight : 0;
         }
 
         this.generalPlotSettings.legendYPostion = plotTop + MarginSettings.legendTopMargin;
