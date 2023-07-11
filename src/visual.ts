@@ -232,13 +232,12 @@ export class Visual implements IVisual {
         const vertically = plotModel != null;
         const className = plotModel ? plotModel.plotSettings.plotType + plotModel.plotId : Constants.categoricalLegendClass + Math.trunc(legend.legendXPosition);
         const dotsPositions = [];
-        const xPos = this.viewModel.generalPlotSettings.plotLegendXPosition;
-
+        let xPos = this.viewModel.generalPlotSettings.plotLegendXPosition;
+        if (plotModel && plotModel.plotSettings.showHeatmap) xPos += MarginSettings.heatmapLegendSize;
         endPos = this.drawLegendTitle(legend.legendTitle, className + ' ' + className + legend.type, vertically ? xPos : endPos, yPos, vertically);
         if (legend.type === FilterType.booleanFilter) {
             this.addBooleanLegendClickHandler(legend);
         } else {
-            //TODO: add xpos vertically
             endPos = this.drawLegendTexts(
                 legend.legendValues,
                 className,
@@ -252,7 +251,6 @@ export class Visual implements IVisual {
             this.addLegendValuesClickHandler(className, legend);
         }
         legend.legendEndPosition = endPos;
-        plotModel.legendEndPos = endPos;
         this.checkOutOfSvg(endPos, vertically);
         return endPos;
     }
@@ -503,7 +501,8 @@ export class Visual implements IVisual {
         let yPos = plotModel.legendEndPos == 0 ? plotModel.plotTop : plotModel.legendEndPos;
         const className = plotModel.plotSettings.plotType + plotModel.plotId;
         const dotsYPositions = [];
-        const xPos = this.viewModel.generalPlotSettings.plotLegendXPosition;
+        let xPos = this.viewModel.generalPlotSettings.plotLegendXPosition;
+        if (plotModel.plotSettings.showHeatmap) xPos += MarginSettings.heatmapLegendSize;
         yPos = this.drawLegendTitle(legend.legendTitle, className, xPos, yPos, true, selectionID);
         yPos = this.drawLegendTexts(
             legend.legendValues,
@@ -515,7 +514,6 @@ export class Visual implements IVisual {
             true
         );
         this.drawLegendDots(legend.legendValues, dotsYPositions, xPos, className, true, null, NumberConstants.plotOverlayFillOpacity);
-        debugger;
         this.checkOutOfSvg(yPos, true);
         plotModel.legendEndPos = yPos + MarginSettings.legendSeparationMargin;
         return ok(null);
@@ -585,7 +583,8 @@ export class Visual implements IVisual {
         this.addVerticalRuler(root, plotModel.plotHeight).mapErr((err) => (plotError = err));
         this.drawPlotOverlay(plotModel).mapErr((err) => (plotError = err));
         if (plotModel.plotSettings.legendColorColumnIndex > 0) {
-            this.drawLegend(this.viewModel.categoricalLegends[plotModel.plotSettings.legendColorColumnIndex - 1], plotModel) + MarginSettings.verticalLegendSeparationMargin;
+            plotModel.legendEndPos =
+                this.drawLegend(this.viewModel.categoricalLegends[plotModel.plotSettings.legendColorColumnIndex - 1], plotModel) + MarginSettings.verticalLegendSeparationMargin;
         }
 
         if (plotModel.plotSettings.overlayCategoryIndex > 0) {

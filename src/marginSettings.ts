@@ -15,6 +15,8 @@ export class MarginSettings {
     static readonly xLabelSpace = 10;
     static readonly scrollbarSpace = 23;
     static readonly legendDotSize = 6;
+    static readonly plotLegendSize = 30;
+    static readonly heatmapLegendSize = 35;
 
     static readonly margins: Margins = {
         top: 10,
