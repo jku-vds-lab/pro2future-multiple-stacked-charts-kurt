@@ -36,6 +36,7 @@ import {
     YAxisData,
     ZoomingSettings,
     LegendData,
+    OverlayType,
 } from './plotInterface';
 
 export class ViewModel {
@@ -269,8 +270,14 @@ export class ViewModel {
             const yColumnId = dataModel.yData[plotNr].columnId;
             const metaDataColumn = getMetadataColumn(dataModel.metadataColumns, yColumnId);
             const plotSettings = dataModel.plotSettingsArray[plotNr];
+            const shiftY = plotSettings.overlayType == OverlayType.Rectangle && plotSettings.centerOverlay && plotSettings.overlayWidthIndex < dataModel.overlayWidth.length;
+            let yShift = 0;
             //create datapoints
             for (let pointNr = 0; pointNr < maxLengthAttributes; pointNr++) {
+                if (shiftY) {
+                    const rectWidth = dataModel.overlayWidth[plotSettings.overlayWidthIndex].values[pointNr] / 2;
+                    yShift = rectWidth > 0 ? rectWidth : yShift;
+                }
                 const selectionId: ISelectionId =
                     dataModel.categorical.categories && dataModel.categorical.categories.length > 0
                         ? dataModel.host.createSelectionIdBuilder().withCategory(dataModel.categorical.categories[0], pointNr).createSelectionId()
@@ -291,10 +298,22 @@ export class ViewModel {
                         this.errors.push(new PlotLegendError(yAxis.name));
                     }
                 }
+                // const widthIndex = plotModel.plotSettings.overlayWidthIndex;
+                // plot.select(`.${Constants.overlayClass}`)
+                //     .selectAll('rect')
+                //     .data(
+                //         plotModel.plotSettings.centerOverlay
+                //             ? overlayRectangles.map((rect) => {
+                //                   rect = structuredClone(rect);
+                //                   rect.y = -rect.width[widthIndex] / 2;
+                //                   return rect;
+                //               })
+                //             : overlayRectangles
+                //     );
 
                 const dataPoint: DataPoint = {
                     xValue: this.generalPlotSettings.xAxisSettings.axisBreak ? this.generalPlotSettings.xAxisSettings.indexMap.get(xVal) : xVal,
-                    yValue: yDataPoints[pointNr],
+                    yValue: yDataPoints[pointNr] - yShift,
                     identity: selectionId,
                     selected: false,
                     color: color,
