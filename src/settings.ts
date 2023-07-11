@@ -37,7 +37,7 @@ export function createFormattingModel(viewModel: ViewModel): powerbi.visuals.For
                 legendDataPoints: [],
                 legendTitle: viewModel.visualOverlayRectangles.name,
                 legendValues: [],
-                legendXEndPosition: 0,
+                legendEndPosition: 0,
                 legendXPosition: 0,
                 metaDataColumn: viewModel.visualOverlayRectangles.metadetaColumn,
                 selectedValues: null,
