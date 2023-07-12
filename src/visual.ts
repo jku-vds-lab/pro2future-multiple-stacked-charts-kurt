@@ -587,7 +587,7 @@ export class Visual implements IVisual {
                 this.drawLegend(this.viewModel.categoricalLegends[plotModel.plotSettings.legendColorColumnIndex - 1], plotModel) + MarginSettings.verticalLegendSeparationMargin;
         }
 
-        if (plotModel.plotSettings.overlayCategoryIndex > 0) {
+        if (plotModel.plotSettings.overlayCategoryIndex > 0 && plotModel.plotSettings.overlayType == OverlayType.Rectangle) {
             this.drawPlotOverlayLegend(plotModel).mapErr((err) => (plotError = err));
         }
         if (plotError) {
