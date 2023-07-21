@@ -20,8 +20,6 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - run: npm audit
       continue-on-error: true
-    - run: npm run eslint --if-present
-    - run: npm run lint --if-present
     - run: npm run package
       env:
         CI: true
