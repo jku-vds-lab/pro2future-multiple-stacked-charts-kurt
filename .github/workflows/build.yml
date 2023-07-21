@@ -18,8 +18,6 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - run: npm audit
-      continue-on-error: true
     - run: npm run package
       env:
         CI: true
