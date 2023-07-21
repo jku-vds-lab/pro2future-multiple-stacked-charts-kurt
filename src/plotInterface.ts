@@ -204,6 +204,7 @@ export interface Legend {
 export interface DataPoint extends SelectableDataPoint {
     xValue: PrimitiveValue;
     yValue: PrimitiveValue;
+    legendValue: number;
     color?: string;
     highlight?: boolean;
     opacity?: number;
