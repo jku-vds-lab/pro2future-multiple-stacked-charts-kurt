@@ -287,13 +287,17 @@ export class ViewModel {
                               .createSelectionId();
                 if (!yDataPoints[pointNr]) continue;
                 let color = plotSettings.fill;
+                let legendVal = NaN;
                 const xVal = xDataPoints[pointNr];
                 if (plotSettings.legendColorColumnIndex > 0) {
                     if (this.categoricalLegends.length >= plotSettings.legendColorColumnIndex) {
                         const categoricalLegend = this.categoricalLegends[plotSettings.legendColorColumnIndex - 1];
                         const dataPointLegendValue = categoricalLegend.legendDataPoints.find((x) => x.i === pointNr)?.yValue;
                         const legendValue = categoricalLegend.legendValues.find((x) => dataPointLegendValue && x.value === dataPointLegendValue.toString());
-                        if (dataPointLegendValue && legendValue) color = legendValue.color;
+                        if (dataPointLegendValue && legendValue) {
+                            color = legendValue.color;
+                        }
+                        legendVal = typeof dataPointLegendValue === 'number' ? <number>dataPointLegendValue : NaN;
                     } else {
                         this.errors.push(new PlotLegendError(yAxis.name));
                     }
@@ -314,6 +318,7 @@ export class ViewModel {
                 const dataPoint: DataPoint = {
                     xValue: this.generalPlotSettings.xAxisSettings.axisBreak ? this.generalPlotSettings.xAxisSettings.indexMap.get(xVal) : xVal,
                     yValue: yDataPoints[pointNr] - yShift,
+                    legendValue: legendVal,
                     identity: selectionId,
                     selected: false,
                     color: color,

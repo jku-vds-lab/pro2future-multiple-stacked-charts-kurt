@@ -955,9 +955,11 @@ export class Visual implements IVisual {
                 .thresholds(thresholds);
             const binnedData = bins(dataPoints);
             const heatmapValues = binnedData.map((bin) => {
-                const extent = d3.extent(bin.map((d) => <number>d.yValue));
-                if (extent[0] === undefined) return 0;
-                return extent[1] - extent[0];
+                const legendNumbers = bin.map((x) => x.legendValue).filter((x) => !Number.isNaN(x));
+                if (legendNumbers.length > 0) return d3.sum(legendNumbers);
+                else {
+                    return d3.sum(bin.map((d) => <number>d.yValue));
+                }
             });
             const colorScale = d3.scaleSequential().interpolator(d3[this.viewModel.colorSettings.colorSettings.heatmapColorScheme]).domain(d3.extent(heatmapValues));
             const heatmapScale = d3.scaleLinear().domain([0, heatmapValues.length]).range([0, this.viewModel.generalPlotSettings.plotWidth]);
