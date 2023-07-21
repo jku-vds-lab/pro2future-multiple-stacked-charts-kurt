@@ -23,6 +23,5 @@ jobs:
       with:
         name: latest-version
         path: dist/multistackedchartsmulticat3A8101158FC14988B45B304F265A2203.2.1.3.0.pbiviz
-      
       env:
         CI: true
