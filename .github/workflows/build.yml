@@ -12,8 +12,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: get version
-      id: version
       uses: notiz-dev/github-action-json-property@release
+      id: version
       with: 
           path: 'pbiviz.json'
           prop_path: 'visual.version'
